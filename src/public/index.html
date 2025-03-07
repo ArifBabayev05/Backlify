@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backlify - API Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        .endpoint-card {
+            margin-bottom: 1rem;
+        }
+        .method-badge {
+            width: 60px;
+            text-align: center;
+        }
+        .get-badge { background-color: #61affe; }
+        .post-badge { background-color: #49cc90; }
+        .put-badge { background-color: #fca130; }
+        .delete-badge { background-color: #f93e3e; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.25rem;
+        }
+        .nav-tabs {
+            margin-bottom: 1rem;
+        }
+        .test-api-btn {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="pb-3 mb-4 border-bottom">
+            <h1 class="display-5 fw-bold">Backlify API Documentation</h1>
+        </header>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Project Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="projectId" class="form-label">Project ID</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="projectId" placeholder="Enter project ID">
+                                <button class="btn btn-primary" id="loadProject">Load Project</button>
+                            </div>
+                        </div>
+                        <div id="projectInfo" class="d-none">
+                            <h4 id="projectName"></h4>
+                            <p><strong>Base URL:</strong> <span id="baseUrl"></span> 
+                                <button class="btn btn-sm btn-success test-api-btn" id="testApiBtn">Test API</button>
+                            </p>
+                            <p><strong>Created:</strong> <span id="createdAt"></span></p>
+                            <p><strong>Status:</strong> <span id="deploymentStatus" class="badge bg-success"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="apiContent" class="d-none">
+            <ul class="nav nav-tabs" id="resourceTabs" role="tablist">
+                <!-- Resource tabs will be added here -->
+            </ul>
+            
+            <div class="tab-content" id="resourceTabContent">
+                <!-- Resource tab content will be added here -->
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="d-none text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading API documentation...</p>
+        </div>
+
+        <div id="errorMessage" class="d-none alert alert-danger mt-4" role="alert">
+            <!-- Error message will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadProjectBtn = document.getElementById('loadProject');
+            const projectIdInput = document.getElementById('projectId');
+            const testApiBtn = document.getElementById('testApiBtn');
+            
+            // Store the current API data
+            let currentApiData = null;
+            
+            // Check if there's a project ID in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectIdFromUrl = urlParams.get('id');
+            if (projectIdFromUrl) {
+                projectIdInput.value = projectIdFromUrl;
+                loadProjectDocumentation(projectIdFromUrl);
+            }
+            
+            loadProjectBtn.addEventListener('click', function() {
+                const projectId = projectIdInput.value.trim();
+                if (projectId) {
+                    // Update URL with project ID
+                    const newUrl = window.location.pathname + '?id=' + projectId;
+                    window.history.pushState({ projectId }, '', newUrl);
+                    
+                    loadProjectDocumentation(projectId);
+                }
+            });
+            
+            testApiBtn.addEventListener('click', function() {
+                if (currentApiData && currentApiData.base_url) {
+                    window.open(currentApiData.base_url, '_blank');
+                }
+            });
+            
+            function loadProjectDocumentation(projectId) {
+                // Show loading indicator
+                document.getElementById('loadingIndicator').classList.remove('d-none');
+                document.getElementById('apiContent').classList.add('d-none');
+                document.getElementById('projectInfo').classList.add('d-none');
+                document.getElementById('errorMessage').classList.add('d-none');
+                
+                // Fetch API documentation
+                fetch(`/api/projects/${projectId}/api`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Store the API data
+                        currentApiData = data;
+                        
+                        // Hide loading indicator
+                        document.getElementById('loadingIndicator').classList.add('d-none');
+                        
+                        // Display project info
+                        document.getElementById('projectName').textContent = data.project_name;
+                        document.getElementById('baseUrl').textContent = data.base_url || 'Not available';
+                        document.getElementById('createdAt').textContent = new Date(data.created_at).toLocaleString();
+                        document.getElementById('deploymentStatus').textContent = data.deployment_status;
+                        document.getElementById('projectInfo').classList.remove('d-none');
+                        
+                        // Enable/disable test API button
+                        if (data.base_url) {
+                            testApiBtn.classList.remove('d-none');
+                        } else {
+                            testApiBtn.classList.add('d-none');
+                        }
+                        
+                        // Generate resource tabs and content
+                        generateResourceTabs(data);
+                        
+                        // Show API content
+                        document.getElementById('apiContent').classList.remove('d-none');
+                    })
+                    .catch(error => {
+                        // Hide loading indicator
+                        document.getElementById('loadingIndicator').classList.add('d-none');
+                        
+                        // Show error message
+                        const errorMessageEl = document.getElementById('errorMessage');
+                        errorMessageEl.textContent = `Error loading project: ${error.message}`;
+                        errorMessageEl.classList.remove('d-none');
+                    });
+            }
+            
+            function generateResourceTabs(data) {
+                const resourceTabs = document.getElementById('resourceTabs');
+                const resourceTabContent = document.getElementById('resourceTabContent');
+                
+                // Clear existing tabs and content
+                resourceTabs.innerHTML = '';
+                resourceTabContent.innerHTML = '';
+                
+                // Generate tabs and content for each resource
+                data.endpoints.forEach((resource, index) => {
+                    // Create tab
+                    const tabId = `${resource.resource}-tab`;
+                    const contentId = `${resource.resource}-content`;
+                    const isActive = index === 0;
+                    
+                    const tabLi = document.createElement('li');
+                    tabLi.className = 'nav-item';
+                    tabLi.innerHTML = `
+                        <button class="nav-link ${isActive ? 'active' : ''}" 
+                                id="${tabId}" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#${contentId}" 
+                                type="button" 
+                                role="tab" 
+                                aria-controls="${contentId}" 
+                                aria-selected="${isActive ? 'true' : 'false'}">
+                            ${resource.resource}
+                        </button>
+                    `;
+                    resourceTabs.appendChild(tabLi);
+                    
+                    // Create content
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = `tab-pane fade ${isActive ? 'show active' : ''}`;
+                    contentDiv.id = contentId;
+                    contentDiv.setAttribute('role', 'tabpanel');
+                    contentDiv.setAttribute('aria-labelledby', tabId);
+                    
+                    // Add resource info
+                    contentDiv.innerHTML = `
+                        <div class="mb-4">
+                            <h3>${resource.resource}</h3>
+                            <p><strong>Base URL:</strong> ${resource.base_url} 
+                                <a href="${resource.base_url}" target="_blank" class="btn btn-sm btn-success">Test Endpoint</a>
+                            </p>
+                        </div>
+                    `;
+                    
+                    // Add endpoints
+                    const endpointsContainer = document.createElement('div');
+                    resource.endpoints.forEach(endpoint => {
+                        const methodClass = `${endpoint.method.toLowerCase()}-badge`;
+                        
+                        const endpointCard = document.createElement('div');
+                        endpointCard.className = 'card endpoint-card';
+                        endpointCard.innerHTML = `
+                            <div class="card-header d-flex align-items-center">
+                                <span class="badge method-badge ${methodClass} me-2">${endpoint.method}</span>
+                                <span class="fw-bold">${endpoint.path}</span>
+                                <a href="${endpoint.full_url}" target="_blank" class="btn btn-sm btn-outline-primary ms-auto">Test</a>
+                            </div>
+                            <div class="card-body">
+                                <p>${endpoint.description}</p>
+                                
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#${resource.resource}-${endpoint.method}-request" type="button" role="tab">Request</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#${resource.resource}-${endpoint.method}-response" type="button" role="tab">Response</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#${resource.resource}-${endpoint.method}-curl" type="button" role="tab">cURL</button>
+                                    </li>
+                                </ul>
+                                
+                                <div class="tab-content mt-3">
+                                    <div class="tab-pane fade show active" id="${resource.resource}-${endpoint.method}-request" role="tabpanel">
+                                        <h6>Request Body:</h6>
+                                        <pre><code>${JSON.stringify(endpoint.request_body, null, 2)}</code></pre>
+                                    </div>
+                                    <div class="tab-pane fade" id="${resource.resource}-${endpoint.method}-response" role="tabpanel">
+                                        <h6>Response:</h6>
+                                        <pre><code>${JSON.stringify(endpoint.response_example, null, 2)}</code></pre>
+                                    </div>
+                                    <div class="tab-pane fade" id="${resource.resource}-${endpoint.method}-curl" role="tabpanel">
+                                        <h6>cURL:</h6>
+                                        <pre><code>${generateCurlCommand(endpoint, resource.base_url)}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        endpointsContainer.appendChild(endpointCard);
+                    });
+                    
+                    contentDiv.appendChild(endpointsContainer);
+                    resourceTabContent.appendChild(contentDiv);
+                });
+            }
+            
+            function generateCurlCommand(endpoint, baseUrl) {
+                const method = endpoint.method.toUpperCase();
+                const url = endpoint.full_url;
+                let curl = `curl -X ${method} "${url}"`;
+                
+                // Add headers
+                curl += ' \\\n  -H "Content-Type: application/json"';
+                
+                // Add request body for POST and PUT
+                if (method === 'POST' || method === 'PUT') {
+                    const body = JSON.stringify(endpoint.request_body);
+                    curl += ` \\\n  -d '${body}'`;
+                }
+                
+                return curl;
+            }
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
