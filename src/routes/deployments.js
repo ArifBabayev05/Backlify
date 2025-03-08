@@ -5,6 +5,61 @@ const supabaseService = require('../services/supabaseService');
 
 /**
  * @swagger
+ * /api/deployments/{id}/status:
+ *   get:
+ *     summary: Get deployment status
+ *     description: Get the detailed status of a deployment by ID
+ *     tags: [Deployments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Deployment ID
+ *     responses:
+ *       200:
+ *         description: Deployment status details
+ *       404:
+ *         description: Deployment not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        req.logger?.info(`Checking status for deployment: ${id}`);
+        
+        // Get deployment from database
+        const deployments = await supabaseService.query('deployments', {
+            where: { deployment_id: id }
+        });
+        
+        if (!deployments || deployments.length === 0) {
+            req.logger?.warn(`Deployment not found: ${id}`);
+            return res.status(404).json({ error: 'Deployment not found' });
+        }
+        
+        const deployment = deployments[0];
+        
+        res.json({
+            deployment_id: deployment.deployment_id,
+            project_id: deployment.project_id,
+            status: deployment.status || 'unknown',
+            message: deployment.message || '',
+            url: deployment.url,
+            local_url: deployment.local_url,
+            created_at: deployment.timestamp || deployment.created_at,
+            platform: deployment.platform || 'unknown'
+        });
+    } catch (error) {
+        req.logger?.error(`Error getting deployment status: ${error.message}`);
+        res.status(500).json({ error: 'Failed to get deployment status' });
+    }
+});
+
+/**
+ * @swagger
  * /api/deployments/{id}:
  *   get:
  *     summary: Get deployment status

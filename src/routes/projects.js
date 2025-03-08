@@ -191,26 +191,24 @@ router.post('/', async (req, res) => {
                 if (table.relationships && table.relationships.length > 0) {
                     for (const relationship of table.relationships) {
                         try {
+                            console.log(`Creating relationship: ${relationship.sourceColumn} -> ${relationship.targetTable}.${relationship.targetColumn} (${relationship.type})`);
                             const relResult = await supabaseService.createRelationship(
+                                `project_${projectId}`,
                                 table.name,
                                 relationship.targetTable,
                                 relationship.type,
                                 relationship.sourceColumn,
-                                relationship.targetColumn,
-                                projectId
+                                relationship.targetColumn
                             );
                             relationshipResults.push({
-                                source: table.name,
-                                target: relationship.targetTable,
+                                source: `${table.name}.${relationship.sourceColumn}`,
+                                target: `${relationship.targetTable}.${relationship.targetColumn}`,
+                                type: relationship.type,
                                 result: relResult
                             });
                         } catch (relError) {
                             req.logger?.error(`Relationship creation error: ${relError.message}`);
-                            relationshipResults.push({
-                                source: table.name,
-                                target: relationship.targetTable,
-                                error: relError.message
-                            });
+                            // Continue with other relationships even if one fails
                         }
                     }
                 }
@@ -224,7 +222,9 @@ router.post('/', async (req, res) => {
         let projectPath = null;
         try {
             req.logger?.info('Generating project files...');
-            projectPath = await deploymentService.generateProjectFiles(schema, endpoints, projectId);
+            const result = await deploymentService.generateProjectFiles(schema, endpoints);
+            projectId = result.projectId;
+            projectPath = result.projectPath;
             req.logger?.info('Project files generated');
         } catch (genError) {
             req.logger?.error(`Project file generation error: ${genError.message}`);
@@ -234,14 +234,12 @@ router.post('/', async (req, res) => {
         const processingTime = Date.now() - startTime;
         req.logger?.info(`Project creation completed in ${processingTime}ms`);
         
-        // Start deployment in the background
-        req.logger?.info('Starting deployment in background...');
+        // Deploy the project
         let deployment = null;
-        
         try {
-            // Pass the project ID to the deployment service
-            deployment = await deploymentService.deployProject(projectPath, projectId);
-            req.logger?.info(`Deployment completed: ${JSON.stringify(deployment)}`);
+            req.logger?.info('Starting deployment in background...');
+            deployment = await deploymentService.deployProject(projectId, parseInt(projectId, 10));
+            req.logger?.info('Deployment started successfully');
             
             // Update project with deployment info
             if (projectId) {
@@ -647,10 +645,13 @@ router.put('/:id', async (req, res) => {
         req.logger?.info('API endpoints generated');
         
         // Generate project files
+        let projectId = null;
         let projectPath = null;
         try {
             req.logger?.info('Generating project files...');
-            projectPath = await deploymentService.generateProjectFiles(schema, endpoints);
+            const result = await deploymentService.generateProjectFiles(schema, endpoints);
+            projectId = result.projectId;
+            projectPath = result.projectPath;
             req.logger?.info('Project files generated');
         } catch (genError) {
             req.logger?.error(`Project file generation error: ${genError.message}`);
@@ -660,9 +661,9 @@ router.put('/:id', async (req, res) => {
         // Deploy the project
         let deployment = null;
         try {
-            req.logger?.info('Deploying project...');
-            deployment = await deploymentService.deployProject(projectPath);
-            req.logger?.info('Project deployed successfully');
+            req.logger?.info('Starting deployment in background...');
+            deployment = await deploymentService.deployProject(projectId, parseInt(projectId, 10));
+            req.logger?.info('Deployment started successfully');
         } catch (deployError) {
             req.logger?.error(`Deployment error: ${deployError.message}`);
             // Continue with the response even if deployment fails

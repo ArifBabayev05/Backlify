@@ -189,50 +189,25 @@ class SupabaseService {
         }
     }
 
-    async createRelationship(sourceTable, targetTable, type, sourceColumn, targetColumn, projectId) {
+    async createRelationship(schemaName, sourceTable, targetTable, type, sourceColumn, targetColumn) {
         try {
-            const schemaName = `project_${projectId}`;
+            console.log(`Creating relationship: ${sourceTable}.${sourceColumn} -> ${targetTable}.${targetColumn} (${type})`);
             
-            const alterTableSQL = this._generateRelationshipSQL(
+            const sql = this._generateRelationshipSQL(
                 `${schemaName}.${sourceTable}`,
                 `${schemaName}.${targetTable}`,
-                type,
                 sourceColumn,
-                targetColumn
+                targetColumn,
+                type
             );
-
-            console.log(`SQL to execute: ${alterTableSQL}`);
             
-            // Execute the SQL
-            const { data, error } = await this.supabase.rpc('execute_sql', {
-                sql: alterTableSQL
-            });
+            console.log(`SQL to execute: ${sql}`);
+            await this.supabase.rpc('execute_sql', { sql });
             
-            if (error) {
-                console.error(`Error creating relationship: ${error.message}`);
-                return { 
-                    success: true,
-                    message: `Relationship between ${sourceTable} and ${targetTable} simulated (Supabase operation failed)`,
-                    inMemory: true,
-                    schema: schemaName
-                };
-            }
-            
-            return { 
-                success: true,
-                message: `Relationship created between ${sourceTable} and ${targetTable} in Supabase schema ${schemaName}`,
-                inMemory: false,
-                schema: schemaName
-            };
+            return true;
         } catch (error) {
-            console.error(`Error in createRelationship:`, error);
-            return { 
-                success: true,
-                message: `Relationship between ${sourceTable} and ${targetTable} simulated (Supabase operation failed)`,
-                inMemory: true,
-                error: error.message,
-                schema: `project_${projectId}`
-            };
+            console.error('Error in createRelationship:', error);
+            throw error;
         }
     }
 
@@ -258,32 +233,28 @@ class SupabaseService {
         return `CREATE TABLE IF NOT EXISTS ${tableName} (${columnDefinitions});`;
     }
 
-    _generateRelationshipSQL(sourceTable, targetTable, type, sourceColumn, targetColumn) {
-        let sql = `ALTER TABLE ${sourceTable} `;
-
-        switch (type.toLowerCase()) {
+    _generateRelationshipSQL(sourceTable, targetTable, sourceColumn, targetColumn, type) {
+        // Clean up the relationship type by removing any extra characters
+        const cleanType = type.replace(/[^a-zA-Z0-9\-]/g, '').trim();
+        
+        console.log(`Generating relationship SQL: ${sourceTable}.${sourceColumn} -> ${targetTable}.${targetColumn} (${cleanType})`);
+        
+        let sql = '';
+        switch (cleanType) {
             case 'one-to-one':
-                sql += `ADD CONSTRAINT fk_${sourceTable}_${targetTable} `;
-                sql += `FOREIGN KEY (${sourceColumn}) REFERENCES ${targetTable}(${targetColumn}) `;
-                sql += `ON DELETE CASCADE;`;
-                break;
-            case 'one-to-many':
-                sql += `ADD CONSTRAINT fk_${sourceTable}_${targetTable} `;
-                sql += `FOREIGN KEY (${sourceColumn}) REFERENCES ${targetTable}(${targetColumn});`;
+                sql = `ALTER TABLE ${sourceTable} ADD CONSTRAINT fk_${sourceTable.replace(/\./g, '_')}_${targetTable.replace(/\./g, '_')} FOREIGN KEY (${sourceColumn}) REFERENCES ${targetTable}(${targetColumn});`;
                 break;
             case 'many-to-one':
-                // Many-to-one is essentially the same as one-to-many but from the perspective of the "many" side
-                sql += `ADD CONSTRAINT fk_${sourceTable}_${targetTable} `;
-                sql += `FOREIGN KEY (${sourceColumn}) REFERENCES ${targetTable}(${targetColumn});`;
+                sql = `ALTER TABLE ${sourceTable} ADD CONSTRAINT fk_${sourceTable.replace(/\./g, '_')}_${targetTable.replace(/\./g, '_')} FOREIGN KEY (${sourceColumn}) REFERENCES ${targetTable}(${targetColumn});`;
                 break;
             case 'many-to-many':
                 // Create junction table
-                const junctionTable = `${sourceTable}_${targetTable}`;
+                const junctionTable = `${sourceTable.replace(/\./g, '_')}_${targetTable.replace(/\./g, '_')}`;
                 sql = `
                     CREATE TABLE ${junctionTable} (
-                        ${sourceTable}_id INTEGER REFERENCES ${sourceTable}(id),
-                        ${targetTable}_id INTEGER REFERENCES ${targetTable}(id),
-                        PRIMARY KEY (${sourceTable}_id, ${targetTable}_id)
+                        ${sourceTable.split('.').pop()}_id INTEGER REFERENCES ${sourceTable}(id),
+                        ${targetTable.split('.').pop()}_id INTEGER REFERENCES ${targetTable}(id),
+                        PRIMARY KEY (${sourceTable.split('.').pop()}_id, ${targetTable.split('.').pop()}_id)
                     );
                 `;
                 break;
@@ -533,9 +504,14 @@ class SupabaseService {
                 sql: "ALTER TABLE deployments ADD COLUMN IF NOT EXISTS platform TEXT DEFAULT 'netlify'"
             });
             
-            // Add projectPath column to deployments table if it doesn't exist
+            // Add project_path column to deployments table if it doesn't exist
             await this.supabase.rpc('execute_sql', {
                 sql: "ALTER TABLE deployments ADD COLUMN IF NOT EXISTS project_path TEXT"
+            });
+            
+            // Add message column to deployments table if it doesn't exist
+            await this.supabase.rpc('execute_sql', {
+                sql: "ALTER TABLE deployments ADD COLUMN IF NOT EXISTS message TEXT"
             });
             
             // Add deployment_platform column to projects table if it doesn't exist
