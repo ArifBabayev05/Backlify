@@ -240,7 +240,7 @@ router.post('/', async (req, res) => {
         
         try {
             // Pass the project ID to the deployment service
-            deployment = await deploymentService.deployToVercel(projectPath, projectId);
+            deployment = await deploymentService.deployProject(projectPath, projectId);
             req.logger?.info(`Deployment completed: ${JSON.stringify(deployment)}`);
             
             // Update project with deployment info
@@ -253,6 +253,7 @@ router.post('/', async (req, res) => {
                             deployment_id: deployment.deployment_id,
                             deployment_url: deployment.url,
                             deployment_status: deployment.status,
+                            deployment_platform: deployment.platform,
                             updated_at: new Date().toISOString()
                         }
                     });
@@ -263,6 +264,7 @@ router.post('/', async (req, res) => {
             }
         } catch (deployError) {
             req.logger?.error(`Deployment error: ${deployError.message}`);
+            // Continue with the response even if deployment fails
         }
         
         res.status(201).json({
@@ -659,7 +661,7 @@ router.put('/:id', async (req, res) => {
         let deployment = null;
         try {
             req.logger?.info('Deploying project...');
-            deployment = await deploymentService.deployToVercel(projectPath);
+            deployment = await deploymentService.deployProject(projectPath);
             req.logger?.info('Project deployed successfully');
         } catch (deployError) {
             req.logger?.error(`Deployment error: ${deployError.message}`);

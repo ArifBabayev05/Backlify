@@ -624,7 +624,7 @@ router.post('/:id/rollback', async (req, res) => {
         const previousDeployment = previousDeployments[1];
         
         // Redeploy the previous version
-        const deployment = await deploymentService.deployToVercel(previousDeployment.projectPath, project_id);
+        const deployment = await deploymentService.deployProject(previousDeployment.project_path, project_id);
         
         // Save rollback deployment
         await supabaseService.query('deployments', {
@@ -633,10 +633,12 @@ router.post('/:id/rollback', async (req, res) => {
                 project_id,
                 deployment_id: deployment.deployment_id,
                 url: deployment.url,
+                local_url: deployment.local_url,
                 status: 'completed',
                 timestamp: new Date().toISOString(),
                 is_rollback: true,
-                rolled_back_from: id
+                rolled_back_from: id,
+                platform: deployment.platform
             }
         });
         

@@ -798,3 +798,313 @@
 {"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:39:51.284Z"}
 {"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:39:51.285Z"}
 {"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:39:51.285Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:53:04.988Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:53:04.990Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:53:04.990Z"}
+{"address":"::","code":"EADDRINUSE","errno":-4091,"level":"error","message":"Server error: listen EADDRINUSE: address already in use :::3000","port":3000,"stack":"Error: listen EADDRINUSE: address already in use :::3000\n    at Server.setupListenHandle [as _listen2] (node:net:1912:16)\n    at listenInCluster (node:net:1969:12)\n    at Server.listen (node:net:2074:7)\n    at Function.listen (C:\\Users\\user\\Desktop\\Backlify\\node_modules\\express\\lib\\application.js:635:24)\n    at Object.<anonymous> (C:\\Users\\user\\Desktop\\Backlify\\src\\index.js:112:20)\n    at Module._compile (node:internal/modules/cjs/loader:1546:14)\n    at Object..js (node:internal/modules/cjs/loader:1698:10)\n    at Module.load (node:internal/modules/cjs/loader:1303:32)\n    at Function._load (node:internal/modules/cjs/loader:1117:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)","syscall":"listen","timestamp":"2025-03-07T23:53:07.708Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:54:20.437Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:54:20.438Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:54:20.438Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:54:49.504Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:54:49.506Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:54:49.506Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:55:03.795Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:55:03.796Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:55:03.796Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:55:21.569Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:55:21.570Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:55:21.570Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:56:17.873Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:56:17.874Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:56:17.875Z"}
+{"address":"::","code":"EADDRINUSE","errno":-4091,"level":"error","message":"Server error: listen EADDRINUSE: address already in use :::3000","port":3000,"stack":"Error: listen EADDRINUSE: address already in use :::3000\n    at Server.setupListenHandle [as _listen2] (node:net:1912:16)\n    at listenInCluster (node:net:1969:12)\n    at Server.listen (node:net:2074:7)\n    at Function.listen (C:\\Users\\user\\Desktop\\Backlify\\node_modules\\express\\lib\\application.js:635:24)\n    at Object.<anonymous> (C:\\Users\\user\\Desktop\\Backlify\\src\\index.js:112:20)\n    at Module._compile (node:internal/modules/cjs/loader:1546:14)\n    at Object..js (node:internal/modules/cjs/loader:1698:10)\n    at Module.load (node:internal/modules/cjs/loader:1303:32)\n    at Function._load (node:internal/modules/cjs/loader:1117:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)","syscall":"listen","timestamp":"2025-03-07T23:56:20.175Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:57:32.188Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:57:32.189Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:57:32.190Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:57:33.076Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:57:33.077Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:57:33.077Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:58:00.791Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:58:00.793Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:58:00.793Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:58:18.877Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:58:18.878Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:58:18.879Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:58:20.899Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:58:20.900Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:58:20.900Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:58:22.093Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:58:22.094Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:58:22.094Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:58:28.550Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:58:28.552Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:58:28.552Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:58:30.349Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:58:30.351Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:58:30.351Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:58:31.165Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:58:31.167Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:58:31.167Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:58:32.275Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:58:32.277Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:58:32.277Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-07T23:58:47.080Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-07T23:58:47.082Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-07T23:58:47.082Z"}
+{"address":"::","code":"EADDRINUSE","errno":-4091,"level":"error","message":"Server error: listen EADDRINUSE: address already in use :::3000","port":3000,"stack":"Error: listen EADDRINUSE: address already in use :::3000\n    at Server.setupListenHandle [as _listen2] (node:net:1912:16)\n    at listenInCluster (node:net:1969:12)\n    at Server.listen (node:net:2074:7)\n    at Function.listen (C:\\Users\\user\\Desktop\\Backlify\\node_modules\\express\\lib\\application.js:635:24)\n    at Object.<anonymous> (C:\\Users\\user\\Desktop\\Backlify\\src\\index.js:119:20)\n    at Module._compile (node:internal/modules/cjs/loader:1546:14)\n    at Object..js (node:internal/modules/cjs/loader:1698:10)\n    at Module.load (node:internal/modules/cjs/loader:1303:32)\n    at Function._load (node:internal/modules/cjs/loader:1117:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)","syscall":"listen","timestamp":"2025-03-08T00:02:37.982Z"}
+{"level":"info","message":"Creating project with prompt: Create a library management API with books, author...","timestamp":"2025-03-08T00:02:45.042Z"}
+{"level":"info","message":"Using AI provider: mistral","timestamp":"2025-03-08T00:02:45.042Z"}
+{"level":"info","message":"Interpreting prompt with AI...","timestamp":"2025-03-08T00:02:45.043Z"}
+{"level":"info","message":"AI interpretation complete","timestamp":"2025-03-08T00:02:51.505Z"}
+{"level":"info","message":"Generating database schema...","timestamp":"2025-03-08T00:02:51.505Z"}
+{"level":"info","message":"Schema generated with 4 tables","timestamp":"2025-03-08T00:02:51.505Z"}
+{"level":"info","message":"Generating API endpoints...","timestamp":"2025-03-08T00:02:51.505Z"}
+{"level":"info","message":"API endpoints generated","timestamp":"2025-03-08T00:02:51.506Z"}
+{"level":"info","message":"Saving project details...","timestamp":"2025-03-08T00:02:51.506Z"}
+{"level":"info","message":"Project details saved with ID: 4","timestamp":"2025-03-08T00:02:52.019Z"}
+{"level":"info","message":"Creating database tables...","timestamp":"2025-03-08T00:02:52.019Z"}
+{"level":"info","message":"Generating project files...","timestamp":"2025-03-08T00:02:53.495Z"}
+{"level":"info","message":"Project files generated","timestamp":"2025-03-08T00:02:53.500Z"}
+{"level":"info","message":"Project creation completed in 8458ms","timestamp":"2025-03-08T00:02:53.500Z"}
+{"level":"info","message":"Starting deployment in background...","timestamp":"2025-03-08T00:02:53.500Z"}
+{"level":"info","message":"Deployment completed: {\"deployment_id\":\"dpl_1741392173501_l9e6r\",\"url\":\"https://api-4.backlify.app\",\"local_url\":\"http://localhost:3000/api/deployments/dpl_1741392173501_l9e6r\",\"status\":\"completed\",\"created_at\":\"2025-03-08T00:02:53.632Z\",\"platform\":\"netlify\"}","timestamp":"2025-03-08T00:02:53.632Z"}
+{"level":"info","message":"Project updated with deployment info","timestamp":"2025-03-08T00:02:53.736Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:02:54.916Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:02:54.917Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:02:54.918Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:05:42.709Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:05:42.710Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:05:42.710Z"}
+{"level":"info","message":"Creating project with prompt: Create a library management API with books, author...","timestamp":"2025-03-08T00:05:51.205Z"}
+{"level":"info","message":"Using AI provider: mistral","timestamp":"2025-03-08T00:05:51.206Z"}
+{"level":"info","message":"Interpreting prompt with AI...","timestamp":"2025-03-08T00:05:51.206Z"}
+{"level":"info","message":"AI interpretation complete","timestamp":"2025-03-08T00:05:58.871Z"}
+{"level":"info","message":"Generating database schema...","timestamp":"2025-03-08T00:05:58.872Z"}
+{"level":"info","message":"Schema generated with 4 tables","timestamp":"2025-03-08T00:05:58.873Z"}
+{"level":"info","message":"Generating API endpoints...","timestamp":"2025-03-08T00:05:58.874Z"}
+{"level":"info","message":"API endpoints generated","timestamp":"2025-03-08T00:05:58.874Z"}
+{"level":"info","message":"Saving project details...","timestamp":"2025-03-08T00:05:58.875Z"}
+{"level":"info","message":"Project details saved with ID: 5","timestamp":"2025-03-08T00:05:59.298Z"}
+{"level":"info","message":"Creating database tables...","timestamp":"2025-03-08T00:05:59.299Z"}
+{"level":"info","message":"Generating project files...","timestamp":"2025-03-08T00:06:00.812Z"}
+{"level":"info","message":"Project files generated","timestamp":"2025-03-08T00:06:00.824Z"}
+{"level":"info","message":"Project creation completed in 9619ms","timestamp":"2025-03-08T00:06:00.824Z"}
+{"level":"info","message":"Starting deployment in background...","timestamp":"2025-03-08T00:06:00.824Z"}
+{"level":"info","message":"Deployment completed: {\"deployment_id\":\"dpl_1741392360826_4q94h\",\"url\":\"https://api-5.backlify.app\",\"local_url\":\"http://localhost:3000/api/deployments/dpl_1741392360826_4q94h\",\"status\":\"completed\",\"created_at\":\"2025-03-08T00:06:01.062Z\",\"platform\":\"netlify\"}","timestamp":"2025-03-08T00:06:01.062Z"}
+{"level":"info","message":"Project updated with deployment info","timestamp":"2025-03-08T00:06:01.064Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:06:01.946Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:06:01.948Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:06:01.948Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:07:05.615Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:07:05.616Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:07:05.616Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:07:23.946Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:07:23.947Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:07:23.947Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:07:39.553Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:07:39.554Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:07:39.555Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:07:49.035Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:07:49.036Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:07:49.036Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:33:58.353Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:33:58.354Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:33:58.355Z"}
+{"address":"::","code":"EADDRINUSE","errno":-4091,"level":"error","message":"Server error: listen EADDRINUSE: address already in use :::3000","port":3000,"stack":"Error: listen EADDRINUSE: address already in use :::3000\n    at Server.setupListenHandle [as _listen2] (node:net:1912:16)\n    at listenInCluster (node:net:1969:12)\n    at Server.listen (node:net:2074:7)\n    at Function.listen (C:\\Users\\user\\Desktop\\Backlify\\node_modules\\express\\lib\\application.js:635:24)\n    at Object.<anonymous> (C:\\Users\\user\\Desktop\\Backlify\\src\\index.js:119:20)\n    at Module._compile (node:internal/modules/cjs/loader:1546:14)\n    at Object..js (node:internal/modules/cjs/loader:1698:10)\n    at Module.load (node:internal/modules/cjs/loader:1303:32)\n    at Function._load (node:internal/modules/cjs/loader:1117:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)","syscall":"listen","timestamp":"2025-03-08T00:34:01.032Z"}
+{"level":"info","message":"Creating project with prompt: Create a library management API with books, author...","timestamp":"2025-03-08T00:34:34.656Z"}
+{"level":"info","message":"Using AI provider: mistral","timestamp":"2025-03-08T00:34:34.657Z"}
+{"level":"info","message":"Interpreting prompt with AI...","timestamp":"2025-03-08T00:34:34.657Z"}
+{"level":"info","message":"AI interpretation complete","timestamp":"2025-03-08T00:34:42.555Z"}
+{"level":"info","message":"Generating database schema...","timestamp":"2025-03-08T00:34:42.556Z"}
+{"level":"info","message":"Schema generated with 4 tables","timestamp":"2025-03-08T00:34:42.556Z"}
+{"level":"info","message":"Generating API endpoints...","timestamp":"2025-03-08T00:34:42.556Z"}
+{"level":"info","message":"API endpoints generated","timestamp":"2025-03-08T00:34:42.556Z"}
+{"level":"info","message":"Saving project details...","timestamp":"2025-03-08T00:34:42.556Z"}
+{"level":"info","message":"Project details saved with ID: 6","timestamp":"2025-03-08T00:34:42.851Z"}
+{"level":"info","message":"Creating database tables...","timestamp":"2025-03-08T00:34:42.851Z"}
+{"level":"info","message":"Generating project files...","timestamp":"2025-03-08T00:34:44.259Z"}
+{"level":"info","message":"Project files generated","timestamp":"2025-03-08T00:34:44.266Z"}
+{"level":"info","message":"Project creation completed in 9610ms","timestamp":"2025-03-08T00:34:44.266Z"}
+{"level":"info","message":"Starting deployment in background...","timestamp":"2025-03-08T00:34:44.266Z"}
+{"level":"info","message":"Deployment completed: {\"deployment_id\":\"dpl_1741394084266_gk6bk\",\"url\":\"https://api-6.backlify.app\",\"local_url\":\"http://localhost:3000/api/deployments/dpl_1741394084266_gk6bk\",\"status\":\"completed\",\"created_at\":\"2025-03-08T00:34:44.395Z\",\"platform\":\"netlify\"}","timestamp":"2025-03-08T00:34:44.395Z"}
+{"level":"info","message":"Project updated with deployment info","timestamp":"2025-03-08T00:34:44.396Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:34:45.397Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:34:45.398Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:34:45.399Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:35:48.307Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:35:48.308Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:35:48.308Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:35:57.321Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:35:57.323Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:35:57.323Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:36:00.614Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:36:00.616Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:36:00.616Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:36:14.719Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:36:14.720Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:36:14.720Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:36:34.340Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:36:34.341Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:36:34.341Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:36:40.730Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:36:40.731Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:36:40.731Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:36:50.242Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:36:50.243Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:36:50.244Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:37:01.175Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:37:01.176Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:37:01.177Z"}
+{"address":"::","code":"EADDRINUSE","errno":-4091,"level":"error","message":"Server error: listen EADDRINUSE: address already in use :::3000","port":3000,"stack":"Error: listen EADDRINUSE: address already in use :::3000\n    at Server.setupListenHandle [as _listen2] (node:net:1912:16)\n    at listenInCluster (node:net:1969:12)\n    at Server.listen (node:net:2074:7)\n    at Function.listen (C:\\Users\\user\\Desktop\\Backlify\\node_modules\\express\\lib\\application.js:635:24)\n    at Object.<anonymous> (C:\\Users\\user\\Desktop\\Backlify\\src\\index.js:119:20)\n    at Module._compile (node:internal/modules/cjs/loader:1546:14)\n    at Object..js (node:internal/modules/cjs/loader:1698:10)\n    at Module.load (node:internal/modules/cjs/loader:1303:32)\n    at Function._load (node:internal/modules/cjs/loader:1117:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)","syscall":"listen","timestamp":"2025-03-08T00:37:03.377Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:37:12.532Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:37:12.533Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:37:12.533Z"}
+{"level":"info","message":"Creating project with prompt: Create a library management API with books, author...","timestamp":"2025-03-08T00:37:16.059Z"}
+{"level":"info","message":"Using AI provider: mistral","timestamp":"2025-03-08T00:37:16.060Z"}
+{"level":"info","message":"Interpreting prompt with AI...","timestamp":"2025-03-08T00:37:16.060Z"}
+{"level":"info","message":"AI interpretation complete","timestamp":"2025-03-08T00:37:22.842Z"}
+{"level":"info","message":"Generating database schema...","timestamp":"2025-03-08T00:37:22.842Z"}
+{"level":"info","message":"Schema generated with 4 tables","timestamp":"2025-03-08T00:37:22.843Z"}
+{"level":"info","message":"Generating API endpoints...","timestamp":"2025-03-08T00:37:22.843Z"}
+{"level":"info","message":"API endpoints generated","timestamp":"2025-03-08T00:37:22.843Z"}
+{"level":"info","message":"Saving project details...","timestamp":"2025-03-08T00:37:22.843Z"}
+{"level":"info","message":"Project details saved with ID: 7","timestamp":"2025-03-08T00:37:23.131Z"}
+{"level":"info","message":"Creating database tables...","timestamp":"2025-03-08T00:37:23.132Z"}
+{"level":"info","message":"Generating project files...","timestamp":"2025-03-08T00:37:24.534Z"}
+{"level":"info","message":"Project files generated","timestamp":"2025-03-08T00:37:24.544Z"}
+{"level":"info","message":"Project creation completed in 8485ms","timestamp":"2025-03-08T00:37:24.544Z"}
+{"level":"info","message":"Starting deployment in background...","timestamp":"2025-03-08T00:37:24.544Z"}
+{"level":"info","message":"Deployment completed: {\"deployment_id\":\"dpl_1741394244545_ezs9t\",\"url\":\"https://api-7.backlify.app\",\"local_url\":\"http://localhost:3000/api/deployments/dpl_1741394244545_ezs9t\",\"status\":\"completed\",\"created_at\":\"2025-03-08T00:37:24.689Z\",\"platform\":\"netlify\"}","timestamp":"2025-03-08T00:37:24.689Z"}
+{"level":"info","message":"Project updated with deployment info","timestamp":"2025-03-08T00:37:24.790Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:37:25.629Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:37:25.631Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:37:25.631Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:39:36.439Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:39:36.440Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:39:36.440Z"}
+{"level":"info","message":"Fetching API documentation for project ID: 12","timestamp":"2025-03-08T00:39:39.854Z"}
+{"level":"warn","message":"Project not found: 12","timestamp":"2025-03-08T00:39:39.957Z"}
+{"level":"info","message":"Fetching API documentation for project ID: 1","timestamp":"2025-03-08T00:39:42.528Z"}
+{"level":"info","message":"Using base URL: http://localhost:3000/api/deployments/dpl_1741389515051_m7skn","timestamp":"2025-03-08T00:39:42.628Z"}
+{"level":"info","message":"API documentation generated for project: 1","timestamp":"2025-03-08T00:39:42.628Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:40:14.355Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:40:14.356Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:40:14.356Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:40:20.149Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:40:20.150Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:40:20.150Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:40:36.745Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:40:36.747Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:40:36.747Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:40:40.668Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:40:40.669Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:40:40.669Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:41:05.519Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:41:05.520Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:41:05.521Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:41:07.037Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:41:07.038Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:41:07.038Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:41:20.365Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:41:20.366Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:41:20.367Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:41:23.346Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:41:23.347Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:41:23.347Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:41:36.974Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:41:36.975Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:41:36.975Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:41:42.600Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:41:42.601Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:41:42.601Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:41:44.585Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:41:44.586Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:41:44.587Z"}
+{"address":"::","code":"EADDRINUSE","errno":-4091,"level":"error","message":"Server error: listen EADDRINUSE: address already in use :::3000","port":3000,"stack":"Error: listen EADDRINUSE: address already in use :::3000\n    at Server.setupListenHandle [as _listen2] (node:net:1912:16)\n    at listenInCluster (node:net:1969:12)\n    at Server.listen (node:net:2074:7)\n    at Function.listen (C:\\Users\\user\\Desktop\\Backlify\\node_modules\\express\\lib\\application.js:635:24)\n    at Object.<anonymous> (C:\\Users\\user\\Desktop\\Backlify\\src\\index.js:119:20)\n    at Module._compile (node:internal/modules/cjs/loader:1546:14)\n    at Object..js (node:internal/modules/cjs/loader:1698:10)\n    at Module.load (node:internal/modules/cjs/loader:1303:32)\n    at Function._load (node:internal/modules/cjs/loader:1117:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)","syscall":"listen","timestamp":"2025-03-08T00:41:55.638Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:42:40.062Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:42:40.063Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:42:40.063Z"}
+{"level":"info","message":"Creating project with prompt: Create a library management API with books, author...","timestamp":"2025-03-08T00:44:25.334Z"}
+{"level":"info","message":"Using AI provider: mistral","timestamp":"2025-03-08T00:44:25.335Z"}
+{"level":"info","message":"Interpreting prompt with AI...","timestamp":"2025-03-08T00:44:25.335Z"}
+{"level":"info","message":"AI interpretation complete","timestamp":"2025-03-08T00:44:32.833Z"}
+{"level":"info","message":"Generating database schema...","timestamp":"2025-03-08T00:44:32.833Z"}
+{"level":"info","message":"Schema generated with 4 tables","timestamp":"2025-03-08T00:44:32.833Z"}
+{"level":"info","message":"Generating API endpoints...","timestamp":"2025-03-08T00:44:32.834Z"}
+{"level":"info","message":"API endpoints generated","timestamp":"2025-03-08T00:44:32.834Z"}
+{"level":"info","message":"Saving project details...","timestamp":"2025-03-08T00:44:32.834Z"}
+{"level":"info","message":"Project details saved with ID: 8","timestamp":"2025-03-08T00:44:33.271Z"}
+{"level":"info","message":"Creating database tables...","timestamp":"2025-03-08T00:44:33.271Z"}
+{"level":"info","message":"Generating project files...","timestamp":"2025-03-08T00:44:34.656Z"}
+{"level":"error","message":"Project file generation error: Project generation failed: schema.find is not a function","timestamp":"2025-03-08T00:44:34.660Z"}
+{"level":"info","message":"Project creation completed in 9327ms","timestamp":"2025-03-08T00:44:34.661Z"}
+{"level":"info","message":"Starting deployment in background...","timestamp":"2025-03-08T00:44:34.661Z"}
+{"level":"error","message":"Deployment error: Deployment failed: Project null not found","timestamp":"2025-03-08T00:44:34.662Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:44:36.055Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:44:36.056Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:44:36.056Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:44:39.542Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:44:39.544Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:44:39.544Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:44:52.503Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:44:52.505Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:44:52.505Z"}
+{"level":"info","message":"Creating project with prompt: Create a library management API with books, author...","timestamp":"2025-03-08T00:45:00.414Z"}
+{"level":"info","message":"Using AI provider: mistral","timestamp":"2025-03-08T00:45:00.414Z"}
+{"level":"info","message":"Interpreting prompt with AI...","timestamp":"2025-03-08T00:45:00.414Z"}
+{"level":"info","message":"AI interpretation complete","timestamp":"2025-03-08T00:45:10.570Z"}
+{"level":"info","message":"Generating database schema...","timestamp":"2025-03-08T00:45:10.570Z"}
+{"level":"info","message":"Schema generated with 4 tables","timestamp":"2025-03-08T00:45:10.570Z"}
+{"level":"info","message":"Generating API endpoints...","timestamp":"2025-03-08T00:45:10.570Z"}
+{"level":"info","message":"API endpoints generated","timestamp":"2025-03-08T00:45:10.570Z"}
+{"level":"info","message":"Saving project details...","timestamp":"2025-03-08T00:45:10.571Z"}
+{"level":"info","message":"Project details saved with ID: 9","timestamp":"2025-03-08T00:45:10.830Z"}
+{"level":"info","message":"Creating database tables...","timestamp":"2025-03-08T00:45:10.830Z"}
+{"level":"info","message":"Generating project files...","timestamp":"2025-03-08T00:45:12.152Z"}
+{"level":"error","message":"Project file generation error: Project generation failed: schema.find is not a function","timestamp":"2025-03-08T00:45:12.157Z"}
+{"level":"info","message":"Project creation completed in 11743ms","timestamp":"2025-03-08T00:45:12.157Z"}
+{"level":"info","message":"Starting deployment in background...","timestamp":"2025-03-08T00:45:12.158Z"}
+{"level":"error","message":"Deployment error: Deployment failed: Project null not found","timestamp":"2025-03-08T00:45:12.158Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:45:13.233Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:45:13.234Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:45:13.235Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:45:55.558Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:45:55.559Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:45:55.560Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:46:11.933Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:46:11.935Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:46:11.935Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:46:24.933Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:46:24.934Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:46:24.934Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:46:46.813Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:46:46.815Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:46:46.815Z"}
+{"level":"info","message":"Creating project with prompt: Create a library management API with books, author...","timestamp":"2025-03-08T00:46:52.317Z"}
+{"level":"info","message":"Using AI provider: mistral","timestamp":"2025-03-08T00:46:52.317Z"}
+{"level":"info","message":"Interpreting prompt with AI...","timestamp":"2025-03-08T00:46:52.318Z"}
+{"level":"info","message":"AI interpretation complete","timestamp":"2025-03-08T00:47:03.081Z"}
+{"level":"info","message":"Generating database schema...","timestamp":"2025-03-08T00:47:03.082Z"}
+{"level":"info","message":"Schema generated with 4 tables","timestamp":"2025-03-08T00:47:03.082Z"}
+{"level":"info","message":"Generating API endpoints...","timestamp":"2025-03-08T00:47:03.082Z"}
+{"level":"info","message":"API endpoints generated","timestamp":"2025-03-08T00:47:03.082Z"}
+{"level":"info","message":"Saving project details...","timestamp":"2025-03-08T00:47:03.082Z"}
+{"level":"info","message":"Project details saved with ID: 10","timestamp":"2025-03-08T00:47:03.479Z"}
+{"level":"info","message":"Creating database tables...","timestamp":"2025-03-08T00:47:03.479Z"}
+{"level":"info","message":"Generating project files...","timestamp":"2025-03-08T00:47:04.758Z"}
+{"level":"info","message":"Project files generated","timestamp":"2025-03-08T00:47:04.768Z"}
+{"level":"info","message":"Project creation completed in 12451ms","timestamp":"2025-03-08T00:47:04.768Z"}
+{"level":"info","message":"Starting deployment in background...","timestamp":"2025-03-08T00:47:04.768Z"}
+{"level":"info","message":"Deployment completed: {\"deployment_id\":\"dpl_1741394824769_zhzqv\",\"url\":\"https://api-10.backlify.app\",\"local_url\":\"http://localhost:3000/api/deployments/dpl_1741394824769_zhzqv\",\"status\":\"completed\",\"created_at\":\"2025-03-08T00:47:04.878Z\",\"platform\":\"netlify\"}","timestamp":"2025-03-08T00:47:04.878Z"}
+{"level":"info","message":"Project updated with deployment info","timestamp":"2025-03-08T00:47:05.005Z"}
+{"level":"info","message":"Backlify server running on port 3000","timestamp":"2025-03-08T00:47:06.059Z"}
+{"level":"info","message":"API Documentation available at http://localhost:3000/docs","timestamp":"2025-03-08T00:47:06.060Z"}
+{"level":"info","message":"Swagger API Documentation available at http://localhost:3000/api-docs","timestamp":"2025-03-08T00:47:06.060Z"}
+{"level":"info","message":"Fetching API documentation for project ID: 12","timestamp":"2025-03-08T00:47:28.740Z"}
+{"level":"warn","message":"Project not found: 12","timestamp":"2025-03-08T00:47:29.109Z"}
+{"level":"info","message":"Fetching API documentation for project ID: 10","timestamp":"2025-03-08T00:47:42.058Z"}
+{"level":"info","message":"Using base URL: https://api-10.backlify.app","timestamp":"2025-03-08T00:47:42.310Z"}
+{"level":"info","message":"API documentation generated for project: 10","timestamp":"2025-03-08T00:47:42.311Z"}
+{"level":"info","message":"Fetching API documentation for project ID: 10","timestamp":"2025-03-08T00:47:52.703Z"}
+{"level":"info","message":"Using base URL: https://api-10.backlify.app","timestamp":"2025-03-08T00:47:52.965Z"}
+{"level":"info","message":"API documentation generated for project: 10","timestamp":"2025-03-08T00:47:52.966Z"}

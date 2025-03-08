@@ -19,6 +19,9 @@ class SupabaseService {
             projects: 1,
             deployments: 1
         };
+        
+        // Ensure required columns exist
+        this._ensureRequiredColumns();
     }
 
     async createSchema(projectId) {
@@ -293,267 +296,210 @@ class SupabaseService {
 
     async query(table, query = {}, projectId = null) {
         try {
-            const { method = 'select', where = {}, data = {}, limit, orderBy } = query;
+            const { method = 'select', where = {}, data = {}, limit, orderBy, offset } = query;
             
-            // If projectId is provided and it's not a system table (projects or deployments)
-            const useSchema = projectId && !['projects', 'deployments'].includes(table);
-            const schemaName = useSchema ? `project_${projectId}` : 'public';
-            const fullTableName = useSchema ? `${schemaName}.${table}` : table;
+            // Add platform field to deployments table if it doesn't exist
+            if (table === 'deployments' && method === 'insert' && !data.platform) {
+                data.platform = 'netlify'; // Default to Netlify
+            }
             
-            // Try to use Supabase first
-            try {
-                switch (method.toLowerCase()) {
-                    case 'select':
-                        let selectBuilder = this.supabase.from(fullTableName).select();
-                        
-                        // Apply where conditions
-                        Object.entries(where).forEach(([column, value]) => {
-                            selectBuilder = selectBuilder.eq(column, value);
-                        });
-                        
-                        // Apply limit
-                        if (limit) {
-                            selectBuilder = selectBuilder.limit(limit);
-                        }
-                        
-                        // Apply order by
-                        if (orderBy) {
-                            const [column, direction] = Object.entries(orderBy)[0];
-                            selectBuilder = selectBuilder.order(column, { ascending: direction === 'asc' });
-                        }
-                        
-                        const { data: selectData, error: selectError } = await selectBuilder;
-                        if (selectError) {
-                            throw selectError;
-                        }
-                        return selectData;
-                    
-                    case 'insert':
-                        const { data: insertData, error: insertError } = await this.supabase
-                            .from(fullTableName)
-                            .insert(data)
-                            .select();
-                        
-                        if (insertError) {
-                            throw insertError;
-                        }
-                        return insertData;
-                    
-                    case 'update':
-                        let updateBuilder = this.supabase.from(fullTableName).update(data);
-                        
-                        // Apply where conditions
-                        Object.entries(where).forEach(([column, value]) => {
-                            updateBuilder = updateBuilder.eq(column, value);
-                        });
-                        
-                        const { data: updateData, error: updateError } = await updateBuilder.select();
-                        if (updateError) {
-                            throw updateError;
-                        }
-                        return updateData;
-                    
-                    case 'delete':
-                        let deleteBuilder = this.supabase.from(fullTableName).delete();
-                        
-                        // Apply where conditions
-                        Object.entries(where).forEach(([column, value]) => {
-                            deleteBuilder = deleteBuilder.eq(column, value);
-                        });
-                        
-                        const { data: deleteData, error: deleteError } = await deleteBuilder;
-                        if (deleteError) {
-                            throw deleteError;
-                        }
-                        return deleteData;
-                    
-                    default:
-                        throw new Error(`Unsupported query method: ${method}`);
-                }
-            } catch (supabaseError) {
-                console.error(`Supabase query error:`, supabaseError);
-                console.log('Falling back to in-memory database');
+            // If using Supabase
+            if (this.supabase) {
+                let queryBuilder = this.supabase.from(table);
                 
-                // Fall back to in-memory database
-                switch (method.toLowerCase()) {
-                    case 'select':
-                        // Query in-memory database
-                        let results = [];
-                        
-                        if (useSchema && this.inMemoryDb.tables[schemaName] && this.inMemoryDb.tables[schemaName][table]) {
-                            results = this.inMemoryDb.tables[schemaName][table].records || [];
-                        } else if (!useSchema) {
-                            results = this.inMemoryDb[table] || [];
-                        }
-                        
-                        // Apply where conditions
-                        if (Object.keys(where).length > 0) {
-                            results = results.filter(item => {
-                                return Object.entries(where).every(([key, value]) => item[key] == value);
-                            });
-                        }
-                        
-                        // Apply order by
-                        if (orderBy) {
-                            const [column, direction] = Object.entries(orderBy)[0];
-                            results.sort((a, b) => {
-                                if (direction === 'asc') {
-                                    return a[column] > b[column] ? 1 : -1;
-                                } else {
-                                    return a[column] < b[column] ? 1 : -1;
-                                }
-                            });
-                        }
-                        
-                        // Apply limit
-                        if (limit && results.length > limit) {
-                            results = results.slice(0, limit);
-                        }
-                        
-                        return results;
-                    
-                    case 'insert':
-                        // Insert into in-memory database
-                        if (useSchema) {
-                            if (!this.inMemoryDb.tables[schemaName]) {
-                                this.inMemoryDb.tables[schemaName] = {};
-                            }
-                            
-                            if (!this.inMemoryDb.tables[schemaName][table]) {
-                                this.inMemoryDb.tables[schemaName][table] = { records: [] };
-                            }
-                            
-                            // Generate ID if not provided
-                            const newItem = { ...data };
-                            if (!newItem.id) {
-                                const records = this.inMemoryDb.tables[schemaName][table].records;
-                                newItem.id = records.length > 0 ? Math.max(...records.map(r => r.id)) + 1 : 1;
-                            }
-                            
-                            this.inMemoryDb.tables[schemaName][table].records.push(newItem);
-                            return [newItem];
-                        } else {
-                            if (!this.inMemoryDb[table]) {
-                                this.inMemoryDb[table] = [];
-                            }
-                            
-                            // Generate ID if not provided
-                            const newItem = { ...data };
-                            if (!newItem.id) {
-                                newItem.id = this.idCounters[table] || 1;
-                                this.idCounters[table] = newItem.id + 1;
-                            }
-                            
-                            this.inMemoryDb[table].push(newItem);
-                            return [newItem];
-                        }
-                    
-                    case 'update':
-                        // Update in-memory database
-                        if (useSchema) {
-                            if (!this.inMemoryDb.tables[schemaName] || !this.inMemoryDb.tables[schemaName][table]) {
-                                return [];
-                            }
-                            
-                            const updatedItems = [];
-                            this.inMemoryDb.tables[schemaName][table].records = this.inMemoryDb.tables[schemaName][table].records.map(item => {
-                                let shouldUpdate = true;
+                try {
+                    // Handle different query methods
+                    switch (method) {
+                        case 'select':
+                            try {
+                                // Start with a basic query
+                                let selectQuery = this.supabase
+                                    .from(table)
+                                    .select();
                                 
-                                // Check where conditions
+                                // Apply where conditions using match
                                 if (Object.keys(where).length > 0) {
-                                    shouldUpdate = Object.entries(where).every(([key, value]) => item[key] == value);
+                                    selectQuery = selectQuery.match(where);
                                 }
                                 
-                                if (shouldUpdate) {
-                                    const updatedItem = { ...item, ...data };
-                                    updatedItems.push(updatedItem);
-                                    return updatedItem;
+                                // Apply limit if provided
+                                if (limit) {
+                                    selectQuery = selectQuery.limit(limit);
                                 }
                                 
-                                return item;
-                            });
-                            
-                            return updatedItems;
-                        } else {
-                            if (!this.inMemoryDb[table]) {
-                                return [];
+                                // Apply order by if provided
+                                if (orderBy) {
+                                    const [column, direction] = Object.entries(orderBy)[0];
+                                    selectQuery = selectQuery.order(column, { ascending: direction === 'asc' });
+                                }
+                                
+                                // Apply offset if provided
+                                if (offset) {
+                                    selectQuery = selectQuery.range(offset, offset + (limit || 10) - 1);
+                                }
+                                
+                                const { data: selectData, error: selectError } = await selectQuery;
+                                
+                                if (selectError) {
+                                    throw selectError;
+                                }
+                                
+                                return selectData;
+                            } catch (error) {
+                                console.error('Select operation error:', error);
+                                // Fall back to in-memory database
+                                return this._queryInMemory(table, { method, where, limit, orderBy, offset });
                             }
                             
-                            const updatedItems = [];
-                            this.inMemoryDb[table] = this.inMemoryDb[table].map(item => {
-                                let shouldUpdate = true;
+                        case 'insert':
+                            try {
+                                // Try to insert with all fields
+                                const { data: insertData, error: insertError } = await this.supabase
+                                    .from(table)
+                                    .insert(data)
+                                    .select();
                                 
-                                // Check where conditions
-                                if (Object.keys(where).length > 0) {
-                                    shouldUpdate = Object.entries(where).every(([key, value]) => item[key] == value);
-                                }
-                                
-                                if (shouldUpdate) {
-                                    const updatedItem = { ...item, ...data };
-                                    updatedItems.push(updatedItem);
-                                    return updatedItem;
-                                }
-                                
-                                return item;
-                            });
-                            
-                            return updatedItems;
-                        }
-                    
-                    case 'delete':
-                        // Delete from in-memory database
-                        if (useSchema) {
-                            if (!this.inMemoryDb.tables[schemaName] || !this.inMemoryDb.tables[schemaName][table]) {
-                                return [];
-                            }
-                            
-                            const deletedItems = [];
-                            const records = this.inMemoryDb.tables[schemaName][table].records;
-                            
-                            this.inMemoryDb.tables[schemaName][table].records = records.filter(item => {
-                                // Check where conditions
-                                if (Object.keys(where).length > 0) {
-                                    const shouldDelete = Object.entries(where).every(([key, value]) => item[key] == value);
-                                    if (shouldDelete) {
-                                        deletedItems.push(item);
-                                        return false;
+                                if (insertError) {
+                                    // If there's an error about missing columns, try to remove those columns and retry
+                                    if (insertError.code === 'PGRST204' && insertError.message.includes('Could not find')) {
+                                        console.error('Supabase query error:', insertError);
+                                        
+                                        // Extract the column name from the error message
+                                        const columnMatch = insertError.message.match(/Could not find the '(.+?)' column/);
+                                        if (columnMatch && columnMatch[1]) {
+                                            const columnName = columnMatch[1];
+                                            console.log(`Removing problematic column: ${columnName}`);
+                                            
+                                            // Create a new data object without the problematic column
+                                            const newData = { ...data };
+                                            delete newData[columnName];
+                                            
+                                            // Try again with the modified data
+                                            const { data: retryData, error: retryError } = await this.supabase
+                                                .from(table)
+                                                .insert(newData)
+                                                .select();
+                                            
+                                            if (retryError) {
+                                                throw retryError;
+                                            }
+                                            
+                                            return retryData;
+                                        }
                                     }
+                                    
+                                    throw insertError;
                                 }
                                 
-                                return true;
-                            });
-                            
-                            return deletedItems;
-                        } else {
-                            if (!this.inMemoryDb[table]) {
-                                return [];
+                                return insertData;
+                            } catch (error) {
+                                console.error('Insert operation error:', error);
+                                // Fall back to in-memory database
+                                return this._queryInMemory(table, { method, data });
                             }
                             
-                            const deletedItems = [];
-                            
-                            this.inMemoryDb[table] = this.inMemoryDb[table].filter(item => {
-                                // Check where conditions
+                        case 'update':
+                            try {
+                                // For update operations, we need to use a different approach
+                                // First, build the filter conditions
+                                let filterConditions = {};
                                 if (Object.keys(where).length > 0) {
-                                    const shouldDelete = Object.entries(where).every(([key, value]) => item[key] == value);
-                                    if (shouldDelete) {
-                                        deletedItems.push(item);
-                                        return false;
-                                    }
+                                    filterConditions = where;
                                 }
                                 
-                                return true;
-                            });
+                                // Then perform the update
+                                const { data: updateData, error: updateError } = await this.supabase
+                                    .from(table)
+                                    .update(data)
+                                    .match(filterConditions)
+                                    .select();
+                                
+                                if (updateError) {
+                                    // If there's an error about missing columns, try to remove those columns and retry
+                                    if (updateError.code === 'PGRST204' && updateError.message.includes('Could not find')) {
+                                        console.error('Supabase query error:', updateError);
+                                        
+                                        // Extract the column name from the error message
+                                        const columnMatch = updateError.message.match(/Could not find the '(.+?)' column/);
+                                        if (columnMatch && columnMatch[1]) {
+                                            const columnName = columnMatch[1];
+                                            console.log(`Removing problematic column: ${columnName}`);
+                                            
+                                            // Create a new data object without the problematic column
+                                            const newData = { ...data };
+                                            delete newData[columnName];
+                                            
+                                            // Try again with the modified data
+                                            const { data: retryData, error: retryError } = await this.supabase
+                                                .from(table)
+                                                .update(newData)
+                                                .match(filterConditions)
+                                                .select();
+                                            
+                                            if (retryError) {
+                                                throw retryError;
+                                            }
+                                            
+                                            return retryData;
+                                        }
+                                    }
+                                    
+                                    throw updateError;
+                                }
+                                
+                                return updateData;
+                            } catch (error) {
+                                console.error('Update operation error:', error);
+                                // Fall back to in-memory database
+                                return this._queryInMemory(table, { method, where, data, limit, orderBy });
+                            }
                             
-                            return deletedItems;
-                        }
+                        case 'delete':
+                            try {
+                                // For delete operations, we need to use a similar approach as update
+                                // First, build the filter conditions
+                                let filterConditions = {};
+                                if (Object.keys(where).length > 0) {
+                                    filterConditions = where;
+                                }
+                                
+                                // Then perform the delete
+                                const { data: deleteData, error: deleteError } = await this.supabase
+                                    .from(table)
+                                    .delete()
+                                    .match(filterConditions)
+                                    .select();
+                                
+                                if (deleteError) {
+                                    throw deleteError;
+                                }
+                                
+                                return deleteData;
+                            } catch (error) {
+                                console.error('Delete operation error:', error);
+                                // Fall back to in-memory database
+                                return this._queryInMemory(table, { method, where, limit, orderBy });
+                            }
+                            
+                        default:
+                            throw new Error(`Unsupported query method: ${method}`);
+                    }
+                } catch (error) {
+                    console.error('Supabase query error:', error);
                     
-                    default:
-                        throw new Error(`Unsupported query method: ${method}`);
+                    // Fall back to in-memory database
+                    console.log('Falling back to in-memory database');
+                    
+                    // Use in-memory database as fallback
+                    return this._queryInMemory(table, query);
                 }
+            } else {
+                // Use in-memory database
+                return this._queryInMemory(table, query);
             }
         } catch (error) {
-            console.error(`Query error:`, error);
-            throw new Error(`Query failed: ${error.message || 'Unknown error'}`);
+            console.error(`Error in query (${table}):`, error.message);
+            throw error;
         }
     }
     
@@ -572,6 +518,222 @@ class SupabaseService {
         }
         
         return result;
+    }
+
+    // Ensure required columns exist in the database
+    async _ensureRequiredColumns() {
+        try {
+            // Add local_url column to deployments table if it doesn't exist
+            await this.supabase.rpc('execute_sql', {
+                sql: "ALTER TABLE deployments ADD COLUMN IF NOT EXISTS local_url TEXT"
+            });
+            
+            // Add platform column to deployments table if it doesn't exist
+            await this.supabase.rpc('execute_sql', {
+                sql: "ALTER TABLE deployments ADD COLUMN IF NOT EXISTS platform TEXT DEFAULT 'netlify'"
+            });
+            
+            // Add projectPath column to deployments table if it doesn't exist
+            await this.supabase.rpc('execute_sql', {
+                sql: "ALTER TABLE deployments ADD COLUMN IF NOT EXISTS project_path TEXT"
+            });
+            
+            // Add deployment_platform column to projects table if it doesn't exist
+            await this.supabase.rpc('execute_sql', {
+                sql: "ALTER TABLE projects ADD COLUMN IF NOT EXISTS deployment_platform TEXT DEFAULT 'netlify'"
+            });
+            
+            console.log('Required columns ensured in database');
+        } catch (error) {
+            console.error('Error ensuring required columns:', error.message);
+            // Continue even if this fails, as we'll fall back to in-memory storage
+        }
+    }
+
+    // Query in-memory database
+    _queryInMemory(table, query = {}) {
+        const { method = 'select', where = {}, data = {}, limit, orderBy, projectId = null } = query;
+        
+        // If projectId is provided and it's not a system table (projects or deployments)
+        const useSchema = projectId && !['projects', 'deployments'].includes(table);
+        const schemaName = useSchema ? `project_${projectId}` : 'public';
+        const fullTableName = useSchema ? `${schemaName}.${table}` : table;
+        
+        switch (method.toLowerCase()) {
+            case 'select':
+                // Query in-memory database
+                let results = [];
+                
+                if (useSchema && this.inMemoryDb.tables[schemaName] && this.inMemoryDb.tables[schemaName][table]) {
+                    results = this.inMemoryDb.tables[schemaName][table].records || [];
+                } else if (!useSchema) {
+                    results = this.inMemoryDb[table] || [];
+                }
+                
+                // Apply where conditions
+                if (Object.keys(where).length > 0) {
+                    results = results.filter(item => {
+                        return Object.entries(where).every(([key, value]) => item[key] == value);
+                    });
+                }
+                
+                // Apply order by
+                if (orderBy) {
+                    const [column, direction] = Object.entries(orderBy)[0];
+                    results.sort((a, b) => {
+                        if (direction === 'asc') {
+                            return a[column] > b[column] ? 1 : -1;
+                        } else {
+                            return a[column] < b[column] ? 1 : -1;
+                        }
+                    });
+                }
+                
+                // Apply limit
+                if (limit && results.length > limit) {
+                    results = results.slice(0, limit);
+                }
+                
+                return results;
+                
+            case 'insert':
+                // Insert into in-memory database
+                if (useSchema) {
+                    if (!this.inMemoryDb.tables[schemaName]) {
+                        this.inMemoryDb.tables[schemaName] = {};
+                    }
+                    
+                    if (!this.inMemoryDb.tables[schemaName][table]) {
+                        this.inMemoryDb.tables[schemaName][table] = { records: [] };
+                    }
+                    
+                    // Generate ID if not provided
+                    const newItem = { ...data };
+                    if (!newItem.id) {
+                        const records = this.inMemoryDb.tables[schemaName][table].records;
+                        newItem.id = records.length > 0 ? Math.max(...records.map(r => r.id)) + 1 : 1;
+                    }
+                    
+                    this.inMemoryDb.tables[schemaName][table].records.push(newItem);
+                    return [newItem];
+                } else {
+                    if (!this.inMemoryDb[table]) {
+                        this.inMemoryDb[table] = [];
+                    }
+                    
+                    // Generate ID if not provided
+                    const newItem = { ...data };
+                    if (!newItem.id) {
+                        newItem.id = this.idCounters[table] || 1;
+                        this.idCounters[table] = newItem.id + 1;
+                    }
+                    
+                    this.inMemoryDb[table].push(newItem);
+                    return [newItem];
+                }
+                
+            case 'update':
+                // Update in-memory database
+                if (useSchema) {
+                    if (!this.inMemoryDb.tables[schemaName] || !this.inMemoryDb.tables[schemaName][table]) {
+                        return [];
+                    }
+                    
+                    const updatedItems = [];
+                    this.inMemoryDb.tables[schemaName][table].records = this.inMemoryDb.tables[schemaName][table].records.map(item => {
+                        let shouldUpdate = true;
+                        
+                        // Check where conditions
+                        if (Object.keys(where).length > 0) {
+                            shouldUpdate = Object.entries(where).every(([key, value]) => item[key] == value);
+                        }
+                        
+                        if (shouldUpdate) {
+                            const updatedItem = { ...item, ...data };
+                            updatedItems.push(updatedItem);
+                            return updatedItem;
+                        }
+                        
+                        return item;
+                    });
+                    
+                    return updatedItems;
+                } else {
+                    if (!this.inMemoryDb[table]) {
+                        return [];
+                    }
+                    
+                    const updatedItems = [];
+                    this.inMemoryDb[table] = this.inMemoryDb[table].map(item => {
+                        let shouldUpdate = true;
+                        
+                        // Check where conditions
+                        if (Object.keys(where).length > 0) {
+                            shouldUpdate = Object.entries(where).every(([key, value]) => item[key] == value);
+                        }
+                        
+                        if (shouldUpdate) {
+                            const updatedItem = { ...item, ...data };
+                            updatedItems.push(updatedItem);
+                            return updatedItem;
+                        }
+                        
+                        return item;
+                    });
+                    
+                    return updatedItems;
+                }
+            
+            case 'delete':
+                // Delete from in-memory database
+                if (useSchema) {
+                    if (!this.inMemoryDb.tables[schemaName] || !this.inMemoryDb.tables[schemaName][table]) {
+                        return [];
+                    }
+                    
+                    const deletedItems = [];
+                    const records = this.inMemoryDb.tables[schemaName][table].records;
+                    
+                    this.inMemoryDb.tables[schemaName][table].records = records.filter(item => {
+                        // Check where conditions
+                        if (Object.keys(where).length > 0) {
+                            const shouldDelete = Object.entries(where).every(([key, value]) => item[key] == value);
+                            if (shouldDelete) {
+                                deletedItems.push(item);
+                                return false;
+                            }
+                        }
+                        
+                        return true;
+                    });
+                    
+                    return deletedItems;
+                } else {
+                    if (!this.inMemoryDb[table]) {
+                        return [];
+                    }
+                    
+                    const deletedItems = [];
+                    
+                    this.inMemoryDb[table] = this.inMemoryDb[table].filter(item => {
+                        // Check where conditions
+                        if (Object.keys(where).length > 0) {
+                            const shouldDelete = Object.entries(where).every(([key, value]) => item[key] == value);
+                            if (shouldDelete) {
+                                deletedItems.push(item);
+                                return false;
+                            }
+                        }
+                        
+                        return true;
+                    });
+                    
+                    return deletedItems;
+                }
+                
+            default:
+                throw new Error(`Unsupported query method: ${method}`);
+        }
     }
 }
 

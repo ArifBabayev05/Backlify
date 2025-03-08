@@ -37,7 +37,12 @@
 <body>
     <div class="container">
         <header class="pb-3 mb-4 border-bottom">
-            <h1 class="display-5 fw-bold">Backlify API Documentation</h1>
+            <div class="d-flex align-items-center justify-content-between">
+                <span class="fs-4">Backlify API Documentation</span>
+                <div>
+                    <a href="/settings" class="btn btn-outline-primary">Deployment Settings</a>
+                </div>
+            </div>
         </header>
 
         <div class="row mb-4">
@@ -86,6 +91,24 @@
 
         <div id="errorMessage" class="d-none alert alert-danger mt-4" role="alert">
             <!-- Error message will be displayed here -->
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Deployment Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Deployment ID:</strong> <span id="deployment-id"></span></p>
+                        <p><strong>Status:</strong> <span id="deployment-status"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>URL:</strong> <a id="deployment-url" href="#" target="_blank"></a></p>
+                        <p><strong>Platform:</strong> <span id="deployment-platform"></span></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -164,6 +187,9 @@
                         
                         // Show API content
                         document.getElementById('apiContent').classList.remove('d-none');
+
+                        // Update deployment information
+                        displayProjectInfo(data);
                     })
                     .catch(error => {
                         // Hide loading indicator
@@ -292,6 +318,22 @@
                 }
                 
                 return curl;
+            }
+
+            function displayProjectInfo(project) {
+                document.getElementById('deployment-id').textContent = project.deployment_id || 'Not deployed';
+                document.getElementById('deployment-status').textContent = project.deployment_status || 'N/A';
+                
+                const deploymentUrl = document.getElementById('deployment-url');
+                if (project.deployment_url) {
+                    deploymentUrl.textContent = project.deployment_url;
+                    deploymentUrl.href = project.deployment_url;
+                } else {
+                    deploymentUrl.textContent = 'N/A';
+                    deploymentUrl.href = '#';
+                }
+                
+                document.getElementById('deployment-platform').textContent = project.deployment_platform || 'N/A';
             }
         });
     </script>

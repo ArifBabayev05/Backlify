@@ -8,6 +8,7 @@ const { swaggerDocs } = require('./utils/swagger');
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const deploymentRoutes = require('./routes/deployments');
+const settingsRoutes = require('./routes/settings');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,15 +47,21 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API Documentation UI
+// Serve documentation page
 app.get('/docs', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Serve settings page
+app.get('/settings', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'settings.html'));
 });
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/deployments', deploymentRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Setup Swagger
 swaggerDocs(app);

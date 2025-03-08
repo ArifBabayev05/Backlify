@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backlify - Deployment Settings</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        .platform-card {
+            cursor: pointer;
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .platform-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .platform-card.selected {
+            border: 2px solid #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .platform-logo {
+            max-height: 60px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="pb-3 mb-4 border-bottom">
+            <div class="d-flex align-items-center text-dark text-decoration-none">
+                <span class="fs-4">Backlify Deployment Settings</span>
+            </div>
+        </header>
+
+        <div class="p-4 mb-4 bg-light rounded-3">
+            <div class="container-fluid py-2">
+                <h1 class="display-5 fw-bold">Choose Your Deployment Platform</h1>
+                <p class="col-md-8 fs-4">Select the platform that best suits your needs for deploying your API projects.</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card platform-card" data-platform="netlify">
+                    <div class="card-body text-center">
+                        <img src="https://www.netlify.com/v3/img/components/logomark.png" alt="Netlify Logo" class="platform-logo">
+                        <h5 class="card-title">Netlify</h5>
+                        <p class="card-text">Fast global CDN, serverless functions, and continuous deployment.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-success">Recommended</span>
+                            <span class="badge bg-primary">Fast</span>
+                            <span class="badge bg-info">Easy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card platform-card" data-platform="vercel">
+                    <div class="card-body text-center">
+                        <img src="https://assets.vercel.com/image/upload/v1588805858/repositories/vercel/logo.png" alt="Vercel Logo" class="platform-logo">
+                        <h5 class="card-title">Vercel</h5>
+                        <p class="card-text">Optimized for frontend frameworks and static sites with serverless functions.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-primary">Fast</span>
+                            <span class="badge bg-info">Scalable</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card platform-card" data-platform="local">
+                    <div class="card-body text-center">
+                        <img src="https://cdn-icons-png.flaticon.com/512/5261/5261905.png" alt="Local Logo" class="platform-logo">
+                        <h5 class="card-title">Local Only</h5>
+                        <p class="card-text">Run your API locally without deploying to any cloud platform.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-secondary">Development</span>
+                            <span class="badge bg-warning text-dark">Testing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Platform Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="platform-config-form">
+                            <div id="netlify-config" class="platform-config">
+                                <h6 class="mb-3">Netlify Configuration</h6>
+                                <div class="mb-3">
+                                    <label for="netlify-token" class="form-label">Netlify API Token</label>
+                                    <input type="password" class="form-control" id="netlify-token" placeholder="Enter your Netlify API token">
+                                    <div class="form-text">You can create a personal access token in your Netlify account settings.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="netlify-team" class="form-label">Team ID (Optional)</label>
+                                    <input type="text" class="form-control" id="netlify-team" placeholder="Enter your Netlify team ID">
+                                </div>
+                            </div>
+
+                            <div id="vercel-config" class="platform-config d-none">
+                                <h6 class="mb-3">Vercel Configuration</h6>
+                                <div class="mb-3">
+                                    <label for="vercel-token" class="form-label">Vercel API Token</label>
+                                    <input type="password" class="form-control" id="vercel-token" placeholder="Enter your Vercel API token">
+                                    <div class="form-text">You can create a token in your Vercel account settings.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="vercel-project" class="form-label">Project ID</label>
+                                    <input type="text" class="form-control" id="vercel-project" placeholder="Enter your Vercel project ID">
+                                </div>
+                            </div>
+
+                            <div id="local-config" class="platform-config d-none">
+                                <h6 class="mb-3">Local Configuration</h6>
+                                <div class="alert alert-info">
+                                    No additional configuration needed. Your APIs will be available at <code>http://localhost:3000/api/deployments/[deployment_id]</code>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-primary">Save Settings</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; 2025 Backlify
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get current platform from localStorage or default to netlify
+            const currentPlatform = localStorage.getItem('deploymentPlatform') || 'netlify';
+            
+            // Select the current platform card
+            const platformCards = document.querySelectorAll('.platform-card');
+            platformCards.forEach(card => {
+                if (card.dataset.platform === currentPlatform) {
+                    card.classList.add('selected');
+                }
+                
+                // Add click event to select platform
+                card.addEventListener('click', function() {
+                    // Remove selected class from all cards
+                    platformCards.forEach(c => c.classList.remove('selected'));
+                    
+                    // Add selected class to clicked card
+                    this.classList.add('selected');
+                    
+                    // Hide all config sections
+                    document.querySelectorAll('.platform-config').forEach(config => {
+                        config.classList.add('d-none');
+                    });
+                    
+                    // Show selected platform config
+                    const platformConfig = document.getElementById(`${this.dataset.platform}-config`);
+                    if (platformConfig) {
+                        platformConfig.classList.remove('d-none');
+                    }
+                });
+            });
+            
+            // Show the current platform config
+            document.querySelectorAll('.platform-config').forEach(config => {
+                config.classList.add('d-none');
+            });
+            const currentConfig = document.getElementById(`${currentPlatform}-config`);
+            if (currentConfig) {
+                currentConfig.classList.remove('d-none');
+            }
+            
+            // Load saved tokens from localStorage
+            if (localStorage.getItem('netlifyToken')) {
+                document.getElementById('netlify-token').value = localStorage.getItem('netlifyToken');
+            }
+            if (localStorage.getItem('netlifyTeam')) {
+                document.getElementById('netlify-team').value = localStorage.getItem('netlifyTeam');
+            }
+            if (localStorage.getItem('vercelToken')) {
+                document.getElementById('vercel-token').value = localStorage.getItem('vercelToken');
+            }
+            if (localStorage.getItem('vercelProject')) {
+                document.getElementById('vercel-project').value = localStorage.getItem('vercelProject');
+            }
+            
+            // Handle form submission
+            document.getElementById('platform-config-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get selected platform
+                const selectedCard = document.querySelector('.platform-card.selected');
+                if (!selectedCard) return;
+                
+                const platform = selectedCard.dataset.platform;
+                localStorage.setItem('deploymentPlatform', platform);
+                
+                // Save platform-specific settings
+                if (platform === 'netlify') {
+                    localStorage.setItem('netlifyToken', document.getElementById('netlify-token').value);
+                    localStorage.setItem('netlifyTeam', document.getElementById('netlify-team').value);
+                } else if (platform === 'vercel') {
+                    localStorage.setItem('vercelToken', document.getElementById('vercel-token').value);
+                    localStorage.setItem('vercelProject', document.getElementById('vercel-project').value);
+                }
+                
+                // Show success message
+                alert('Settings saved successfully!');
+                
+                // Redirect to home page
+                window.location.href = '/';
+            });
+        });
+    </script>
+</body>
+</html> 
