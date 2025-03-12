@@ -1,6 +1,7 @@
 const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
+const supabaseService = require('./supabaseService');
 
 class DeploymentService {
     constructor() {
@@ -239,7 +240,6 @@ class DeploymentService {
                 }
                 
                 // Update in database
-                const supabaseService = require('./supabaseService');
                 await supabaseService.query('deployments', {
                     method: 'update',
                     where: { deployment_id },
@@ -260,63 +260,75 @@ class DeploymentService {
     // Save deployment to database
     async _saveDeploymentToDatabase(deployment) {
         try {
-            // Use the actual project ID from the database if available
-            let project_id = deployment.actualProjectId;
+            // First, check if the project exists
+            const projectId = deployment.project_id;
             
-            // If no actual project ID is provided, try to use the project_id field
-            if (!project_id) {
-                project_id = deployment.project_id;
-                
-                // If it's a string that starts with "project_", try to extract the actual ID from the logs
-                if (typeof project_id === 'string' && project_id.startsWith('project_')) {
-                    // Look for "Project details saved with ID: X" in the logs
-                    const logMatch = console.log.toString().match(/Project details saved with ID: (\d+)/);
-                    if (logMatch && logMatch[1]) {
-                        project_id = parseInt(logMatch[1], 10);
-                        console.log(`Found project ID ${project_id} from logs`);
-                    } else {
-                        // If we can't find it in logs, use a hardcoded recent ID
-                        project_id = 26; // Use the most recent project ID we saw in the logs
-                        console.log(`Using hardcoded project ID: ${project_id}`);
-                    }
-                } else if (typeof project_id === 'string' && /^\d+$/.test(project_id)) {
-                    // If it's a numeric string, convert to integer
-                    project_id = parseInt(project_id, 10);
-                }
-            }
-            
-            // If we still don't have a valid project ID, use a default
-            if (!project_id || isNaN(project_id)) {
-                project_id = 26; // Use the most recent project ID we saw in the logs
-                console.log(`Using default project ID: ${project_id}`);
-            }
-            
-            console.log(`Saving deployment to database with project_id: ${project_id}`);
-            
-            // Get the Supabase service
-            const supabaseService = require('./supabaseService');
-            
-            // Insert the deployment into the database
-            const result = await supabaseService.query('deployments', {
-                method: 'insert',
-                data: {
-                    project_id: project_id,
-                    deployment_id: deployment.id,
-                    url: deployment.url || null,
-                    status: deployment.status || 'pending',
-                    timestamp: deployment.timestamp || new Date().toISOString(),
-                    is_rollback: deployment.is_rollback || false,
-                    rolled_back_from: deployment.rolled_back_from || null,
-                    message: deployment.message || null
-                }
+            // Try to get the project by name first (for string project IDs)
+            let projects = await supabaseService.query('projects', {
+                method: 'select',
+                where: { name: projectId }
             });
             
-            console.log('Deployment saved to Supabase');
-            return result;
+            // If not found by name, try by ID
+            if (!projects || projects.length === 0) {
+                projects = await supabaseService.query('projects', {
+                    method: 'select',
+                    where: { id: projectId }
+                });
+            }
+            
+            let project = projects && projects.length > 0 ? projects[0] : null;
+            
+            // If project doesn't exist, create it
+            if (!project) {
+                console.log(`Project ${projectId} not found, creating it...`);
+                
+                // Create a minimal project entry
+                const projectData = {
+                    name: projectId,
+                    prompt: 'No prompt provided',
+                    created_at: new Date().toISOString(),
+                    deployment_platform: deployment.platform || 'netlify'
+                };
+                
+                try {
+                    const createdProjects = await supabaseService.query('projects', {
+                        method: 'insert',
+                        data: projectData
+                    });
+                    
+                    if (!createdProjects || createdProjects.length === 0) {
+                        throw new Error('Failed to create project entry');
+                    }
+                    
+                    project = createdProjects[0];
+                    console.log(`Created project with ID: ${project.id}`);
+                } catch (error) {
+                    console.error('Error creating project:', error);
+                    throw new Error('Failed to create project entry');
+                }
+            }
+            
+            // Now save the deployment
+            const deploymentData = {
+                ...deployment,
+                project_id: project.id, // Use the numeric ID from the project
+                created_at: new Date().toISOString()
+            };
+            
+            const deployments = await supabaseService.query('deployments', {
+                method: 'insert',
+                data: deploymentData
+            });
+            
+            if (!deployments || deployments.length === 0) {
+                throw new Error('Failed to create deployment entry');
+            }
+            
+            return deployments[0];
         } catch (error) {
             console.error('Insert operation error:', error);
-            // Continue even if database operation fails
-            return null;
+            throw error;
         }
     }
     
@@ -324,171 +336,116 @@ class DeploymentService {
     async _prepareNetlifyDeployment(projectPath, projectId) {
         const fs = require('fs').promises;
         const path = require('path');
-        let archiver;
         
         try {
-            archiver = require('archiver');
-        } catch (error) {
-            console.error('Archiver package not found. Installing...');
-            // If archiver is not installed, use a simpler approach
-            return this._prepareNetlifyDeploymentSimple(projectPath, projectId);
-        }
-        
-        const { createWriteStream } = require('fs');
-        
-        // Create a zip file of the project
-        const zipPath = path.join(projectPath, 'deployment.zip');
-        
-        console.log(`Creating deployment package for Netlify at ${zipPath}...`);
-        
-        return new Promise(async (resolve, reject) => {
+            console.log(`Preparing Netlify deployment for ${projectPath}...`);
+            
+            // Ensure Netlify configuration is up to date
+            await this._generateNetlifyConfig(projectPath);
+            
+            // Install dependencies in the functions directory
+            console.log('Installing dependencies for functions...');
+            const functionsDir = path.join(projectPath, 'functions');
+            
             try {
-                // Make sure Netlify configuration files exist
+                // Check if functions directory exists
+                await fs.access(functionsDir);
+                
+                // Check if api.js exists
+                const apiJsPath = path.join(functionsDir, 'api.js');
+                await fs.access(apiJsPath);
+                console.log('Functions directory and api.js exist');
+            } catch (error) {
+                console.log('Functions directory or api.js missing, regenerating...');
                 await this._generateNetlifyConfig(projectPath);
-                
-                // Create public directory for static files
-                const publicDir = path.join(projectPath, 'public');
-                await fs.mkdir(publicDir, { recursive: true });
-                
-                // Create a simple index.html in the public directory
-                const indexHtml = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Backlify API</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1 {
-            color: #2563eb;
-        }
-        code {
-            background-color: #f1f5f9;
-            padding: 2px 4px;
-            border-radius: 4px;
-        }
-        .endpoint {
-            background-color: #f8fafc;
-            border-left: 4px solid #2563eb;
-            padding: 12px;
-            margin-bottom: 12px;
-            border-radius: 0 4px 4px 0;
-        }
-    </style>
-</head>
-<body>
-    <h1>Backlify API</h1>
-    <p>Your API is deployed and ready to use!</p>
-    <p>Access your API endpoints at: <code>/.netlify/functions/api/[resource]</code></p>
-    
-    <h2>Available Endpoints</h2>
-    <div id="endpoints">
-        ${this.generatedProjects[projectPath.split('/').pop()]?.endpoints.map(endpoint => `
-        <div class="endpoint">
-            <h3>${endpoint.name}</h3>
-            <p><strong>GET</strong> <code>/.netlify/functions/api/${endpoint.name}</code> - Get all ${endpoint.name}</p>
-            <p><strong>GET</strong> <code>/.netlify/functions/api/${endpoint.name}/{id}</code> - Get a specific ${endpoint.name}</p>
-            <p><strong>POST</strong> <code>/.netlify/functions/api/${endpoint.name}</code> - Create a new ${endpoint.name}</p>
-            <p><strong>PUT</strong> <code>/.netlify/functions/api/${endpoint.name}/{id}</code> - Update a ${endpoint.name}</p>
-            <p><strong>DELETE</strong> <code>/.netlify/functions/api/${endpoint.name}/{id}</code> - Delete a ${endpoint.name}</p>
-        </div>
-        `).join('') || ''}
-    </div>
-</body>
-</html>
-`;
-                
-                await fs.writeFile(path.join(publicDir, 'index.html'), indexHtml);
-                
-                // Create a file to stream archive data to
+            }
+            
+            // Create a zip file for deployment
+            const { createWriteStream } = require('fs');
+            const archiver = require('archiver');
+            const zipPath = path.join(projectPath, 'deployment.zip');
+            
+            return new Promise((resolve, reject) => {
                 const output = createWriteStream(zipPath);
-                const archive = archiver('zip', {
-                    zlib: { level: 9 } // Sets the compression level
-                });
+                const archive = archiver('zip', { zlib: { level: 9 } });
                 
-                // Listen for all archive data to be written
                 output.on('close', async () => {
-                    console.log(`Archive created: ${archive.pointer()} total bytes`);
-                    
                     try {
-                        // Read the zip file
+                        console.log(`Archive created: ${archive.pointer()} total bytes`);
                         const zipData = await fs.readFile(zipPath);
                         resolve(zipData);
-                    } catch (readError) {
-                        reject(readError);
+                    } catch (error) {
+                        reject(error);
                     }
                 });
                 
-                // Good practice to catch warnings
-                archive.on('warning', (err) => {
-                    if (err.code === 'ENOENT') {
-                        console.warn('Archive warning:', err);
-                    } else {
-                        reject(err);
-                    }
-                });
+                archive.on('error', (err) => reject(err));
                 
-                // Good practice to catch this error explicitly
-                archive.on('error', (err) => {
-                    reject(err);
-                });
-                
-                // Pipe archive data to the file
                 archive.pipe(output);
                 
-                // Add files from the project directory
+                // Add all files from the project directory
                 archive.directory(projectPath, false);
                 
-                // Finalize the archive
                 archive.finalize();
-            } catch (error) {
-                reject(error);
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error preparing Netlify deployment:', error);
+            return this._prepareNetlifyDeploymentSimple(projectPath, projectId);
+        }
     }
     
-    // Simpler approach for preparing Netlify deployment when archiver is not available
+    // Simple approach for deploying to Netlify when form-data is not available
     async _prepareNetlifyDeploymentSimple(projectPath, projectId) {
         const fs = require('fs').promises;
         const path = require('path');
         
-        console.log('Using simple deployment method for Netlify...');
-        
-        // Make sure Netlify configuration files exist
-        await this._generateNetlifyConfig(projectPath);
-        
-        // Create a JSON representation of the project files
-        const files = {};
-        
-        // Read all files in the project directory
-        const readDir = async (dir, base = '') => {
-            const entries = await fs.readdir(dir, { withFileTypes: true });
+        try {
+            console.log('Using simple deployment method for Netlify...');
             
-            for (const entry of entries) {
-                const fullPath = path.join(dir, entry.name);
-                const relativePath = path.join(base, entry.name);
+            // Make sure Netlify configuration files exist
+            await this._generateNetlifyConfig(projectPath);
+            
+            // Create a structured object for Netlify's direct deploy API
+            const deployFiles = {};
+            
+            // Function to recursively read directory
+            const readDir = async (dir, base = '') => {
+                const entries = await fs.readdir(dir, { withFileTypes: true });
                 
-                if (entry.isDirectory()) {
-                    await readDir(fullPath);
-                } else {
-                    const content = await fs.readFile(fullPath);
-                    files[relativePath] = content.toString('base64');
+                for (const entry of entries) {
+                    const fullPath = path.join(dir, entry.name);
+                    const relativePath = base ? `${base}/${entry.name}` : entry.name;
+                    
+                    if (entry.isDirectory()) {
+                        await readDir(fullPath, relativePath);
+                    } else {
+                        // Read file content as base64
+                        const content = await fs.readFile(fullPath);
+                        deployFiles[relativePath] = {
+                            content: content.toString('base64'),
+                            encoding: 'base64'
+                        };
+                    }
                 }
+            };
+            
+            // Read all files in the project
+            await readDir(projectPath);
+            
+            console.log(`Prepared ${Object.keys(deployFiles).length} files for deployment`);
+            
+            // Check for critical files
+            if (deployFiles['functions/api.js']) {
+                console.log('API function file is included in deployment');
+            } else {
+                console.warn('WARNING: API function file is missing from deployment!');
             }
-        };
-        
-        await readDir(projectPath);
-        
-        // Return the files as a JSON string
-        return JSON.stringify(files);
+            
+            return deployFiles;
+        } catch (error) {
+            console.error('Error in simple deployment preparation:', error);
+            throw error;
+        }
     }
     
     // Get or create a Netlify site
@@ -593,145 +550,286 @@ class DeploymentService {
     // Deploy to Netlify site
     async _deployToNetlifySite(siteId, deploymentFiles) {
         const axios = require('axios');
-        let FormData;
-        
-        try {
-            FormData = require('form-data');
-        } catch (error) {
-            console.error('form-data package not found, using simple JSON deployment');
-            return this._deployToNetlifySiteSimple(siteId, deploymentFiles);
-        }
         
         try {
             console.log(`Deploying to Netlify site ${siteId}...`);
             
-            // Create a form data object
-            const formData = new FormData();
-            
-            // Check if deploymentFiles is a Buffer (zip file) or a string (JSON)
+            // Check if deploymentFiles is a Buffer (zip file) or an object (direct deploy)
             if (Buffer.isBuffer(deploymentFiles)) {
-                formData.append('file', deploymentFiles, {
-                    filename: 'deployment.zip',
-                    contentType: 'application/zip'
-                });
-            } else {
-                // If it's a string (JSON), convert it to a Buffer
-                const buffer = Buffer.from(deploymentFiles);
-                formData.append('file', buffer, {
-                    filename: 'deployment.zip',
-                    contentType: 'application/zip'
-                });
-            }
-            
-            // Add function files flag to indicate this is a functions deployment
-            formData.append('function_files', 'true');
-            
-            // Deploy to Netlify
-            const { data: deployment } = await axios.post(
-                `https://api.netlify.com/api/v1/sites/${siteId}/deploys`,
-                formData,
-                {
-                    headers: {
-                        ...formData.getHeaders(),
-                        Authorization: `Bearer ${this.netlifyToken}`
-                    },
-                    maxContentLength: Infinity,
-                    maxBodyLength: Infinity,
-                    timeout: 60000 // 60 second timeout
-                }
-            );
-            
-            const siteUrl = deployment.ssl_url || deployment.url;
-            console.log(`Deployed to Netlify: ${siteUrl}`);
-            console.log(`Deployment ID: ${deployment.id}`);
-            console.log(`Deployment Status: ${deployment.state}`);
-            
-            // If the deployment is not ready, wait for it
-            if (deployment.state !== 'ready') {
-                console.log('Waiting for deployment to be ready...');
+                console.log('Deploying using zip file upload...');
                 
-                // Wait for the deployment to be ready (max 30 seconds)
-                for (let i = 0; i < 10; i++) {
-                    await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+                // Try to use form-data for zip upload
+                try {
+                    const FormData = require('form-data');
+                    const formData = new FormData();
                     
-                    // Check deployment status
-                    const { data: updatedDeployment } = await axios.get(
-                        `https://api.netlify.com/api/v1/sites/${siteId}/deploys/${deployment.id}`,
+                    formData.append('file', deploymentFiles, {
+                        filename: 'deployment.zip',
+                        contentType: 'application/zip'
+                    });
+                    
+                    // IMPORTANT: Add these flags to ensure functions are processed
+                    formData.append('function_files', 'true');
+                    formData.append('functions', 'true');
+                    
+                    console.log('Uploading deployment with function flags...');
+                    
+                    // Deploy to Netlify
+                    const { data: deployment } = await axios.post(
+                        `https://api.netlify.com/api/v1/sites/${siteId}/deploys`,
+                        formData,
                         {
                             headers: {
+                                ...formData.getHeaders(),
                                 Authorization: `Bearer ${this.netlifyToken}`
-                            }
+                            },
+                            maxContentLength: Infinity,
+                            maxBodyLength: Infinity,
+                            timeout: 120000 // 2 minute timeout
                         }
                     );
                     
-                    console.log(`Deployment Status: ${updatedDeployment.state}`);
-                    
-                    if (updatedDeployment.state === 'ready') {
-                        console.log('Deployment is ready!');
-                        return {
-                            ...updatedDeployment,
-                            url: updatedDeployment.ssl_url || updatedDeployment.url
-                        };
-                    }
-                    
-                    if (updatedDeployment.state === 'error') {
-                        throw new Error(`Deployment failed: ${updatedDeployment.error_message || 'Unknown error'}`);
-                    }
+                    return this._handleDeploymentResult(deployment, siteId);
+                } catch (error) {
+                    console.error('Error with form-data upload:', error.message);
+                    // Fall back to direct deploy if form-data fails
+                    return this._deployToNetlifySiteSimple(siteId, deploymentFiles);
                 }
-                
-                console.log('Deployment is taking longer than expected. Returning current status.');
+            } else {
+                // If it's not a Buffer, use the direct deploy API
+                return this._deployToNetlifySiteSimple(siteId, deploymentFiles);
             }
-            
-            // Return the deployment with the correct URL
-            return {
-                ...deployment,
-                url: siteUrl
-            };
         } catch (error) {
             console.error('Error deploying to Netlify:', error.message);
             if (error.response) {
-                console.error('Response data:', error.response.data);
                 console.error('Response status:', error.response.status);
+                console.error('Response data:', error.response.data);
             }
             throw error;
         }
     }
     
-    // Simple approach for deploying to Netlify when form-data is not available
+    // Fix the simple deployment method to properly handle functions
     async _deployToNetlifySiteSimple(siteId, deploymentFiles) {
         const axios = require('axios');
         
         try {
-            console.log(`Deploying to Netlify site ${siteId} using simple method...`);
+            console.log(`Deploying to Netlify site ${siteId} using direct deploy API...`);
             
-            // Parse the JSON if it's a string
-            const files = typeof deploymentFiles === 'string' 
-                ? JSON.parse(deploymentFiles) 
-                : deploymentFiles;
+            // If deploymentFiles is a Buffer, we need to convert it to a structured object
+            let files = deploymentFiles;
             
-            // Deploy to Netlify using the direct API
+            if (Buffer.isBuffer(deploymentFiles)) {
+                console.log('Converting zip file to structured files object...');
+                
+                // Create a minimal deployment with just the essential files
+                files = {
+                    'netlify.toml': {
+                        content: Buffer.from(`[build]
+  command = "npm run build"
+  publish = "public"
+  functions = "functions"
+
+[functions]
+  directory = "functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/health"
+  to = "/.netlify/functions/api/health"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200`).toString('base64'),
+                        encoding: 'base64'
+                    },
+                    'functions/api.js': {
+                        content: Buffer.from(`// Netlify serverless function
+const express = require('express');
+const serverless = require('serverless-http');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+
+// Create Express app
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'ok',
+        message: 'API is running on Netlify Functions',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+    res.status(200).json({
+        name: 'API generated by Backlify',
+        version: '1.0.0',
+        description: 'RESTful API deployed on Netlify Functions',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Test routes
+app.get('/users', (req, res) => {
+    res.json([
+        { id: 1, name: 'Test User 1' },
+        { id: 2, name: 'Test User 2' }
+    ]);
+});
+
+// Export the serverless function
+exports.handler = serverless(app);`).toString('base64'),
+                        encoding: 'base64'
+                    },
+                    'functions/package.json': {
+                        content: Buffer.from(JSON.stringify({
+            name: "netlify-functions",
+            version: "1.0.0",
+            description: "Netlify Functions for API",
+            main: "api.js",
+            dependencies: {
+                "express": "^4.18.2",
+                "serverless-http": "^3.1.1",
+                "cors": "^2.8.5",
+                                "body-parser": "^1.20.2"
+                            }
+                        }, null, 2)).toString('base64'),
+                        encoding: 'base64'
+                    },
+                    'public/index.html': {
+                        content: Buffer.from(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; }
+        .endpoint { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        code { background: #e0e0e0; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>API Documentation</h1>
+    <p>This API is deployed using Netlify Functions.</p>
+    
+    <h2>Endpoints</h2>
+    <div class="endpoint">
+        <h3>Health Check</h3>
+        <p><code>GET /.netlify/functions/api/health</code></p>
+    </div>
+    
+    <div class="endpoint">
+        <h3>Users</h3>
+        <p><code>GET /.netlify/functions/api/users</code></p>
+    </div>
+    
+    <p>All API endpoints are available at <code>/.netlify/functions/api/...</code></p>
+</body>
+</html>`).toString('base64'),
+                        encoding: 'base64'
+                    }
+                };
+            }
+            
+            console.log('Files prepared for direct deploy:');
+            console.log(Object.keys(files).join(', '));
+            
+            // Deploy to Netlify using the direct deploy API
+            // IMPORTANT: Don't pass functions and function_files as top-level properties
             const { data: deployment } = await axios.post(
                 `https://api.netlify.com/api/v1/sites/${siteId}/deploys`,
-                { files },
+                { files },  // Only pass the files object
                 {
                     headers: {
                         Authorization: `Bearer ${this.netlifyToken}`,
                         'Content-Type': 'application/json'
                     },
-                    timeout: 60000 // 60 second timeout
+                    timeout: 120000 // 2 minute timeout for larger deployments
                 }
             );
             
-            console.log(`Deployed to Netlify using simple method: ${deployment.url}`);
-            return deployment;
+            return this._handleDeploymentResult(deployment, siteId);
         } catch (error) {
-            console.error('Error deploying to Netlify using simple method:', error.message);
+            console.error('Error deploying to Netlify using direct deploy:', error.message);
             if (error.response) {
-                console.error('Response data:', error.response.data);
                 console.error('Response status:', error.response.status);
+                console.error('Response data:', JSON.stringify(error.response.data, null, 2));
             }
             throw error;
         }
+    }
+
+    // Improve the deployment result handler to wait longer for functions to be ready
+    async _handleDeploymentResult(deployment, siteId) {
+        const axios = require('axios');
+        const siteUrl = deployment.ssl_url || deployment.url;
+        
+        console.log(`Deployed to Netlify: ${siteUrl}`);
+        console.log(`Deployment ID: ${deployment.id}`);
+        console.log(`Deployment Status: ${deployment.state}`);
+        
+        // If the deployment is not ready, wait for it
+        if (deployment.state !== 'ready') {
+            console.log('Waiting for deployment to be ready...');
+            
+            // Wait for the deployment to be ready (max 60 seconds)
+            for (let i = 0; i < 20; i++) {
+                await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+                
+                // Check deployment status
+                const { data: updatedDeployment } = await axios.get(
+                    `https://api.netlify.com/api/v1/sites/${siteId}/deploys/${deployment.id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${this.netlifyToken}`
+                        }
+                    }
+                );
+                
+                console.log(`Deployment Status: ${updatedDeployment.state}`);
+                
+                if (updatedDeployment.state === 'ready') {
+                    console.log('Deployment is ready!');
+                    
+                    // Wait a bit more for functions to be fully initialized
+                    console.log('Waiting for functions to initialize...');
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    
+                    return {
+                        ...updatedDeployment,
+                        url: updatedDeployment.ssl_url || updatedDeployment.url
+                    };
+                }
+                
+                if (updatedDeployment.state === 'error') {
+                    throw new Error(`Deployment failed: ${updatedDeployment.error_message || 'Unknown error'}`);
+                }
+            }
+            
+            console.log('Deployment is taking longer than expected. Returning current status.');
+        }
+        
+        // Return the deployment with the correct URL
+        return {
+            ...deployment,
+            url: siteUrl
+        };
     }
     
     // Keep the old method name for backward compatibility
@@ -863,52 +961,6 @@ This API is ready to be deployed to Netlify. Just connect your repository to Net
             readmeContent
         );
     }
-
-    // Load settings from localStorage if in browser environment
-    _loadSettingsFromLocalStorage() {
-        try {
-            // Check if we're in a browser environment
-            if (typeof window !== 'undefined' && window.localStorage) {
-                // Get deployment platform
-                const platform = localStorage.getItem('deploymentPlatform');
-                if (platform) {
-                    this.deploymentPlatform = platform;
-                }
-                
-                // Get Netlify settings
-                if (platform === 'netlify' || !platform) {
-                    const netlifyToken = localStorage.getItem('netlifyToken');
-                    if (netlifyToken) {
-                        this.netlifyToken = netlifyToken;
-                    }
-                    
-                    const netlifyTeam = localStorage.getItem('netlifyTeam');
-                    if (netlifyTeam) {
-                        this.netlifyTeamId = netlifyTeam;
-                    }
-                }
-                
-                // Get Vercel settings
-                if (platform === 'vercel') {
-                    const vercelToken = localStorage.getItem('vercelToken');
-                    if (vercelToken) {
-                        this.vercelToken = vercelToken;
-                    }
-                    
-                    const vercelProject = localStorage.getItem('vercelProject');
-                    if (vercelProject) {
-                        this.projectId = vercelProject;
-                    }
-                }
-                
-                // If platform is 'local', force simulation
-                if (platform === 'local') {
-                    this.simulateDeployment = true;
-                }
-            }
-        } catch (error) {
-            console.error('Error loading settings from localStorage:', error.message);
-        }    }
 
     // Generate server.js file for the project
     async _generateServerFile(projectPath, schema, endpoints) {
@@ -1539,18 +1591,15 @@ This API is ready to be deployed to Netlify. Just connect your repository to Net
         const fs = require('fs').promises;
         const path = require('path');
         
-        // Create netlify.toml file
+        // Create netlify.toml file with correct configuration
         const netlifyConfig = `[build]
   command = "npm run build"
   publish = "public"
   functions = "functions"
 
-[dev]
-  command = "npm run dev"
-  port = 8888
-  targetPort = 3000
-  publish = "public"
-  autoLaunch = true
+[functions]
+  directory = "functions"
+  node_bundler = "esbuild"
 
 [[redirects]]
   from = "/api/*"
@@ -1577,13 +1626,19 @@ This API is ready to be deployed to Netlify. Just connect your repository to Net
         const functionsDir = path.join(projectPath, 'functions');
         await fs.mkdir(functionsDir, { recursive: true });
         
-        // Create api.js in functions directory
-        const apiFunctionContent = `const express = require('express');
+        // Create api.js in functions directory with proper dependencies
+        const apiFunctionContent = `// Netlify serverless function
+const express = require('express');
 const serverless = require('serverless-http');
-const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { Pool } = require('pg');
+const dotenv = require('dotenv');
+
+// Load environment variables
+dotenv.config();
+
+// Create Express app
+const app = express();
 
 // Middleware
 app.use(cors());
@@ -1593,34 +1648,31 @@ app.use(bodyParser.json());
 app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'ok',
-        message: 'API is running on Netlify',
-        timestamp: new Date().toISOString(),
-        environment: 'netlify'
+        message: 'API is running on Netlify Functions',
+        timestamp: new Date().toISOString()
     });
 });
 
-// Root endpoint with API information
+// Root endpoint
 app.get('/', (req, res) => {
     res.status(200).json({
         name: 'API generated by Backlify',
         version: '1.0.0',
-        description: 'RESTful API deployed on Netlify',
-        documentation: 'See the index.html page for API documentation',
-        endpoints: {
-            health: '/.netlify/functions/api/health',
-            api: '/.netlify/functions/api'
-        }
+        description: 'RESTful API deployed on Netlify Functions',
+        timestamp: new Date().toISOString()
     });
 });
 
-// Import routes
-const routes = require('../routes');
-
-// Use routes
-app.use('/api', routes);
+// Test routes
+app.get('/users', (req, res) => {
+    res.json([
+        { id: 1, name: 'Test User 1' },
+        { id: 2, name: 'Test User 2' }
+    ]);
+});
 
 // Export the serverless function
-module.exports.handler = serverless(app);
+exports.handler = serverless(app);
 `;
         
         await fs.writeFile(
@@ -1628,11 +1680,30 @@ module.exports.handler = serverless(app);
             apiFunctionContent
         );
         
+        // Create a package.json specifically for the functions directory
+        const functionPackageJson = {
+            name: "netlify-functions",
+            version: "1.0.0",
+            description: "Netlify Functions for API",
+            main: "api.js",
+            dependencies: {
+                "express": "^4.18.2",
+                "serverless-http": "^3.1.1",
+                "cors": "^2.8.5",
+                "body-parser": "^1.20.2"
+            }
+        };
+        
+        await fs.writeFile(
+            path.join(functionsDir, 'package.json'),
+            JSON.stringify(functionPackageJson, null, 2)
+        );
+        
         // Create public directory
         const publicDir = path.join(projectPath, 'public');
         await fs.mkdir(publicDir, { recursive: true });
         
-        // Create index.html in public directory
+        // Create a simple index.html in public directory
         const indexHtmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1640,131 +1711,28 @@ module.exports.handler = serverless(app);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Documentation</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-        h2 {
-            color: #3498db;
-            margin-top: 30px;
-        }
-        ul {
-            padding-left: 20px;
-        }
-        li {
-            margin-bottom: 10px;
-        }
-        code {
-            background-color: #f8f8f8;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-family: monospace;
-        }
-        .endpoint {
-            background-color: #f8f8f8;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-        .method {
-            font-weight: bold;
-            color: #2980b9;
-        }
-        .health-check {
-            background-color: #e8f7f3;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            border-left: 4px solid #27ae60;
-        }
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; }
+        .endpoint { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        code { background: #e0e0e0; padding: 2px 5px; border-radius: 3px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>API Documentation</h1>
-        <p>Welcome to the API documentation. Below are the available endpoints:</p>
-        
-        <div class="health-check">
-            <h2>Health Check</h2>
-            <p>Use this endpoint to verify the API is running:</p>
-            <div class="endpoint">
-                <p><span class="method">GET</span> <code>/.netlify/functions/api/health</code> - Check API health</p>
-            </div>
-            <p>You can also use the shorthand: <code>/health</code></p>
-        </div>
-        
-        <div id="endpoints">
-            <p>Loading endpoints...</p>
-        </div>
-        
-        <h2>API Base URL</h2>
-        <p>All endpoints are relative to: <code>/.netlify/functions/api</code></p>
-        
-        <script>
-            // Fetch the API endpoints
-            fetch('/.netlify/functions/api')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('API not available');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const endpointsDiv = document.getElementById('endpoints');
-                    endpointsDiv.innerHTML = '';
-                    
-                    // Add endpoints from the API
-                    const resources = ${JSON.stringify(
-                        Array.isArray(projectPath.endpoints) 
-                        ? projectPath.endpoints.map(e => e.name) 
-                        : []
-                    )};
-                    
-                    resources.forEach(resource => {
-                        const section = document.createElement('div');
-                        section.innerHTML = \`
-                            <h2>\${resource}</h2>
-                            <div class="endpoint">
-                                <p><span class="method">GET</span> <code>/.netlify/functions/api/api/\${resource}</code> - Get all \${resource}</p>
-                            </div>
-                            <div class="endpoint">
-                                <p><span class="method">GET</span> <code>/.netlify/functions/api/api/\${resource}/:id</code> - Get a specific \${resource} by ID</p>
-                            </div>
-                            <div class="endpoint">
-                                <p><span class="method">POST</span> <code>/.netlify/functions/api/api/\${resource}</code> - Create a new \${resource}</p>
-                            </div>
-                            <div class="endpoint">
-                                <p><span class="method">PUT</span> <code>/.netlify/functions/api/api/\${resource}/:id</code> - Update a \${resource}</p>
-                            </div>
-                            <div class="endpoint">
-                                <p><span class="method">DELETE</span> <code>/.netlify/functions/api/api/\${resource}/:id</code> - Delete a \${resource}</p>
-                            </div>
-                        \`;
-                        endpointsDiv.appendChild(section);
-                    });
-                    
-                    if (resources.length === 0) {
-                        endpointsDiv.innerHTML = '<p>No endpoints available</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching API:', error);
-                    document.getElementById('endpoints').innerHTML = '<p>Error loading endpoints. API may not be available.</p>';
-                });
-        </script>
+    <h1>API Documentation</h1>
+    <p>This API is deployed using Netlify Functions.</p>
+    
+    <h2>Endpoints</h2>
+    <div class="endpoint">
+        <h3>Health Check</h3>
+        <p><code>GET /.netlify/functions/api/health</code></p>
     </div>
+    
+    <div class="endpoint">
+        <h3>Users</h3>
+        <p><code>GET /.netlify/functions/api/users</code></p>
+    </div>
+    
+    <p>All API endpoints are available at <code>/.netlify/functions/api/...</code></p>
 </body>
 </html>`;
         
@@ -1859,6 +1827,52 @@ module.exports.handler = serverless(app);
             return false;
         }
     }
+
+    // Load settings from localStorage if in browser environment
+    _loadSettingsFromLocalStorage() {
+        try {
+            // Check if we're in a browser environment
+            if (typeof window !== 'undefined' && window.localStorage) {
+                // Get deployment platform
+                const platform = localStorage.getItem('deploymentPlatform');
+                if (platform) {
+                    this.deploymentPlatform = platform;
+                }
+                
+                // Get Netlify settings
+                if (platform === 'netlify' || !platform) {
+                    const netlifyToken = localStorage.getItem('netlifyToken');
+                    if (netlifyToken) {
+                        this.netlifyToken = netlifyToken;
+                    }
+                    
+                    const netlifyTeam = localStorage.getItem('netlifyTeam');
+                    if (netlifyTeam) {
+                        this.netlifyTeamId = netlifyTeam;
+                    }
+                }
+                
+                // Get Vercel settings
+                if (platform === 'vercel') {
+                    const vercelToken = localStorage.getItem('vercelToken');
+                    if (vercelToken) {
+                        this.vercelToken = vercelToken;
+                    }
+                    
+                    const vercelProject = localStorage.getItem('vercelProject');
+                    if (vercelProject) {
+                        this.projectId = vercelProject;
+                    }
+                }
+                
+                // If platform is 'local', force simulation
+                if (platform === 'local') {
+                    this.simulateDeployment = true;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading settings from localStorage:', error.message);
+        }    }
 }
 
 // Export a singleton instance

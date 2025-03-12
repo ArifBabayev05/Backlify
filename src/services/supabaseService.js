@@ -267,17 +267,45 @@ class SupabaseService {
 
     async query(table, query = {}, projectId = null) {
         try {
-            const { method = 'select', where = {}, data = {}, limit, orderBy, offset } = query;
+            const { method = 'select', where = {}, limit, orderBy, offset } = query;
+            // Create a copy of data instead of destructuring it directly from query
+            let data = query.data ? { ...query.data } : {};
+            
+            // Special case for project creation
+            if (table === 'projects' && method === 'insert') {
+                return await this.createProject(data);
+            }
             
             // Add platform field to deployments table if it doesn't exist
             if (table === 'deployments' && method === 'insert' && !data.platform) {
                 data.platform = 'netlify'; // Default to Netlify
             }
             
+            // Special handling for projects table
+            if (table === 'projects') {
+                // For insert operations
+                if (method === 'insert') {
+                    // Handle project_id field - store it as name and use numeric id
+                    if (data.project_id) {
+                        data.name = data.project_id;
+                        delete data.project_id;
+                    }
+                    
+                    // If id is a string that looks like a project_id
+                    if (data.id && typeof data.id === 'string' && data.id.startsWith('project_')) {
+                        data.name = data.id;
+                        data.id = Date.now(); // Use timestamp as numeric ID
+                    }
+                    
+                    // Ensure prompt has a value
+                    if (!data.prompt) {
+                        data.prompt = 'No prompt provided';
+                    }
+                }
+            }
+            
             // If using Supabase
             if (this.supabase) {
-                let queryBuilder = this.supabase.from(table);
-                
                 try {
                     // Handle different query methods
                     switch (method) {
@@ -290,7 +318,14 @@ class SupabaseService {
                                 
                                 // Apply where conditions using match
                                 if (Object.keys(where).length > 0) {
-                                    selectQuery = selectQuery.match(where);
+                                    // Handle project_id in where conditions
+                                    const cleanedWhere = { ...where };
+                                    if (table === 'projects' && cleanedWhere.project_id) {
+                                        cleanedWhere.name = cleanedWhere.project_id;
+                                        delete cleanedWhere.project_id;
+                                    }
+                                    
+                                    selectQuery = selectQuery.match(cleanedWhere);
                                 }
                                 
                                 // Apply limit if provided
@@ -324,7 +359,52 @@ class SupabaseService {
                             
                         case 'insert':
                             try {
-                                // Try to insert with all fields
+                                // For projects table, try a more robust approach
+                                if (table === 'projects') {
+                                    try {
+                                        // First, check if we need to create the project with a specific ID
+                                        let insertData;
+                                        
+                                        // Try to insert with all fields
+                                        const { data: result, error } = await this.supabase
+                                            .from(table)
+                                            .insert(data)
+                                            .select();
+                                        
+                                        if (error) {
+                                            // If there's an error, try a simplified approach
+                                            console.error('Initial insert error:', error);
+                                            
+                                            // Create a minimal project entry with just the essential fields
+                                            const minimalProject = {
+                                                name: data.name || data.id || `Project ${Date.now()}`,
+                                                prompt: data.prompt || 'No prompt provided',
+                                                created_at: new Date().toISOString()
+                                            };
+                                            
+                                            const { data: fallbackResult, error: fallbackError } = await this.supabase
+                                                .from(table)
+                                                .insert(minimalProject)
+                                                .select();
+                                            
+                                            if (fallbackError) {
+                                                throw fallbackError;
+                                            }
+                                            
+                                            insertData = fallbackResult;
+                                        } else {
+                                            insertData = result;
+                                        }
+                                        
+                                        return insertData;
+                                    } catch (projectError) {
+                                        console.error('Project creation error:', projectError);
+                                        // Fall back to in-memory
+                                        return this._queryInMemory(table, { method, data });
+                                    }
+                                }
+                                
+                                // For other tables, use the standard approach
                                 const { data: insertData, error: insertError } = await this.supabase
                                     .from(table)
                                     .insert(data)
@@ -359,6 +439,34 @@ class SupabaseService {
                                         }
                                     }
                                     
+                                    // If there's a type error for integer, try to convert the value
+                                    if (insertError.code === '22P02' && insertError.message.includes('invalid input syntax for type integer')) {
+                                        console.error('Type conversion error:', insertError);
+                                        
+                                        // Create a new data object with converted ID
+                                        const newData = { ...data };
+                                        if (newData.id && typeof newData.id === 'string') {
+                                            // Store original ID as name if not already set
+                                            if (!newData.name) {
+                                                newData.name = newData.id;
+                                            }
+                                            // Generate a numeric ID
+                                            newData.id = Date.now();
+                                            
+                                            // Try again with the modified data
+                                            const { data: retryData, error: retryError } = await this.supabase
+                                                .from(table)
+                                                .insert(newData)
+                                                .select();
+                                            
+                                            if (retryError) {
+                                                throw retryError;
+                                            }
+                                            
+                                            return retryData;
+                                        }
+                                    }
+                                    
                                     throw insertError;
                                 }
                                 
@@ -375,7 +483,35 @@ class SupabaseService {
                                 // First, build the filter conditions
                                 let filterConditions = {};
                                 if (Object.keys(where).length > 0) {
-                                    filterConditions = where;
+                                    filterConditions = { ...where };
+                                    
+                                    // Handle project_id in where conditions
+                                    if (table === 'projects' && filterConditions.project_id) {
+                                        filterConditions.name = filterConditions.project_id;
+                                        delete filterConditions.project_id;
+                                    }
+                                }
+                                
+                                // Handle projects table specifically
+                                if (table === 'projects') {
+                                    // If trying to update with project_id, store it as name
+                                    if (data.project_id) {
+                                        data.name = data.project_id;
+                                        delete data.project_id;
+                                    }
+                                    
+                                    // Convert string IDs to integers if needed
+                                    if (filterConditions.id && typeof filterConditions.id === 'string') {
+                                        // If it's a project_id format, search by name instead
+                                        if (filterConditions.id.startsWith('project_')) {
+                                            filterConditions.name = filterConditions.id;
+                                            delete filterConditions.id;
+                                        }
+                                        // Otherwise check if it's a numeric string
+                                        else if (!isNaN(filterConditions.id)) {
+                                            filterConditions.id = parseInt(filterConditions.id, 10);
+                                        }
+                                    }
                                 }
                                 
                                 // Then perform the update
@@ -405,6 +541,31 @@ class SupabaseService {
                                                 .from(table)
                                                 .update(newData)
                                                 .match(filterConditions)
+                                                .select();
+                                            
+                                            if (retryError) {
+                                                throw retryError;
+                                            }
+                                            
+                                            return retryData;
+                                        }
+                                    }
+                                    
+                                    // If there's a type error for integer, try to convert the value
+                                    if (updateError.code === '22P02' && updateError.message.includes('invalid input syntax for type integer')) {
+                                        console.error('Type conversion error:', updateError);
+                                        
+                                        // If we're trying to update by project_id string, try to find by name instead
+                                        if (filterConditions.id && typeof filterConditions.id === 'string' && filterConditions.id.startsWith('project_')) {
+                                            const newFilterConditions = { ...filterConditions };
+                                            newFilterConditions.name = newFilterConditions.id;
+                                            delete newFilterConditions.id;
+                                            
+                                            // Try again with the modified filter
+                                            const { data: retryData, error: retryError } = await this.supabase
+                                                .from(table)
+                                                .update(data)
+                                                .match(newFilterConditions)
                                                 .select();
                                             
                                             if (retryError) {
@@ -517,6 +678,16 @@ class SupabaseService {
             // Add deployment_platform column to projects table if it doesn't exist
             await this.supabase.rpc('execute_sql', {
                 sql: "ALTER TABLE projects ADD COLUMN IF NOT EXISTS deployment_platform TEXT DEFAULT 'netlify'"
+            });
+            
+            // Add prompt column to projects table if it doesn't exist with a default value
+            await this.supabase.rpc('execute_sql', {
+                sql: "ALTER TABLE projects ADD COLUMN IF NOT EXISTS prompt TEXT DEFAULT 'No prompt provided' NOT NULL"
+            });
+            
+            // Add name column to projects table if it doesn't exist
+            await this.supabase.rpc('execute_sql', {
+                sql: "ALTER TABLE projects ADD COLUMN IF NOT EXISTS name TEXT"
             });
             
             console.log('Required columns ensured in database');
@@ -709,6 +880,68 @@ class SupabaseService {
                 
             default:
                 throw new Error(`Unsupported query method: ${method}`);
+        }
+    }
+
+    // Add this helper method to the SupabaseService class
+    async createProject(projectData) {
+        try {
+            // Ensure we have the required fields
+            const data = {
+                name: projectData.name || projectData.id || `Project ${Date.now()}`,
+                prompt: projectData.prompt || 'No prompt provided',
+                created_at: projectData.created_at || new Date().toISOString(),
+                deployment_platform: projectData.deployment_platform || 'netlify'
+            };
+            
+            // If the ID is a string that looks like a project ID, use it as name
+            if (projectData.id && typeof projectData.id === 'string' && projectData.id.startsWith('project_')) {
+                data.name = projectData.id;
+                // Generate a numeric ID
+                data.id = Date.now();
+            }
+            
+            // Try to insert the project
+            const { data: result, error } = await this.supabase
+                .from('projects')
+                .insert(data)
+                .select();
+            
+            if (error) {
+                console.error('Project creation error:', error);
+                
+                // Try a more minimal approach
+                const minimalData = {
+                    name: data.name,
+                    prompt: data.prompt,
+                    created_at: data.created_at
+                };
+                
+                const { data: fallbackResult, error: fallbackError } = await this.supabase
+                    .from('projects')
+                    .insert(minimalData)
+                    .select();
+                
+                if (fallbackError) {
+                    // Fall back to in-memory storage
+                    console.log('Falling back to in-memory storage for project creation');
+                    return this._queryInMemory('projects', { 
+                        method: 'insert', 
+                        data: minimalData 
+                    });
+                }
+                
+                return fallbackResult;
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('Error in createProject:', error);
+            // Fall back to in-memory
+            return this._queryInMemory('projects', { 
+                method: 'insert', 
+                data: projectData 
+            });
         }
     }
 }
